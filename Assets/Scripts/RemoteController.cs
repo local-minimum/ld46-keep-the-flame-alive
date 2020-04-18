@@ -19,6 +19,8 @@ public class RemoteController : MonoBehaviour
 {
     public delegate void SendCommand(RobotCommand command, float nextCommandInSeconds);
     public static event SendCommand OnSendCommand;
+    public delegate void DrawCommand(RobotCommand command, int feedSlot, int feedLength);
+    public static event DrawCommand OnDrawCommand;
 
     [SerializeField]
     private bool robotAlive = true;
@@ -41,8 +43,7 @@ public class RemoteController : MonoBehaviour
 
     // Start is called before the first frame update
     void Start()
-    {
-        InitDeck();
+    {        
         StartCoroutine(ExecutionLoop());
     }
 
@@ -51,22 +52,27 @@ public class RemoteController : MonoBehaviour
         for (int idcmd=0; idcmd < cardFreqs.Length; idcmd++)
         {
             for (int idcard=0, ncard=cardFreqs[idcmd]; idcard < ncard; idcard++)
-            {
+            {             
                 drawDeck.Add((RobotCommand)idcmd);
             }
         }
         drawDeck.Shuffle();
-        Debug.Log(string.Format("{0} cards", drawDeck.Count));
+    }
+
+    private void DrawOne()
+    {
+        if (drawDeck.Count == 0) FlipTrash();
+        RobotCommand cmd = drawDeck[0];
+        drawDeck.RemoveAt(0);
+        OnDrawCommand?.Invoke(cmd, instructionsFeed.Count, instructionFeedLength);
+        instructionsFeed.Add(cmd);
     }
 
     private void DrawToFeed()
     {   
         for (int i=instructionsFeed.Count; i < instructionFeedLength; i++)
         {
-            if (drawDeck.Count == 0) FlipTrash();
-            RobotCommand cmd = drawDeck[0];
-            drawDeck.RemoveAt(0);
-            instructionsFeed.Add(cmd);
+            DrawOne();
         }
     }
 
@@ -79,7 +85,6 @@ public class RemoteController : MonoBehaviour
 
     private void ExecuteCommand(float nextCommandInSeconds)
     {
-        DrawToFeed();
         if (instructionsFeed.Count == 0)
         {
             Debug.LogWarning("Instructions feed empty, should never happen");
@@ -88,11 +93,22 @@ public class RemoteController : MonoBehaviour
         RobotCommand cmd = instructionsFeed[0];
         instructionsFeed.RemoveAt(0);
         trashDeck.Add(cmd);
-        OnSendCommand?.Invoke(cmd, nextCommandInSeconds);  
+        OnSendCommand?.Invoke(cmd, nextCommandInSeconds);
+        DrawToFeed();
     }
 
+    [SerializeField] float beforeCardsDelay = 2f;
+    [SerializeField] float beforeExecutionDelay = 3f;
     private IEnumerator<WaitForSeconds> ExecutionLoop()
     {
+        InitDeck();
+        yield return new WaitForSeconds(beforeCardsDelay);
+        while (instructionsFeed.Count < instructionFeedLength)
+        {
+            DrawOne();
+            yield return new WaitForSeconds(0.1f);
+        }
+        yield return new WaitForSeconds(beforeExecutionDelay);
         while (true)
         {
             float nextCommandInSeconds = (float)processingFramRate / (float)processingHertz;
