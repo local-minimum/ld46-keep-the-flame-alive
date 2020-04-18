@@ -43,6 +43,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc36c81d289e8e9488c37bc65855bfe7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  connection: {fileID: 0}
+  entryMode: 0
 --- !u!1 &457069120
 GameObject:
   m_ObjectHideFlags: 0
@@ -86,6 +88,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc36c81d289e8e9488c37bc65855bfe7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  connection: {fileID: 0}
+  entryMode: 0
 --- !u!1 &1471224427
 GameObject:
   m_ObjectHideFlags: 0
@@ -129,6 +133,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc36c81d289e8e9488c37bc65855bfe7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  connection: {fileID: 0}
+  entryMode: 0
 --- !u!1 &3990153087474100801
 GameObject:
   m_ObjectHideFlags: 0
@@ -202,6 +208,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc36c81d289e8e9488c37bc65855bfe7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  connection: {fileID: 0}
+  entryMode: 0
 --- !u!1 &8142547838417971408
 GameObject:
   m_ObjectHideFlags: 0
@@ -346,12 +354,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   restPosition: {fileID: 3799336741650388303}
   entries:
-  - {fileID: 509190366560042864}
-  - {fileID: 195144098}
-  - {fileID: 1471224428}
-  - {fileID: 457069121}
+  - {fileID: 274925858}
+  - {fileID: 195144099}
+  - {fileID: 1471224429}
+  - {fileID: 457069122}
   exits:
-  - {fileID: 1471224428}
-  - {fileID: 457069121}
-  - {fileID: 509190366560042864}
-  - {fileID: 195144098}
+  - {fileID: 1471224429}
+  - {fileID: 457069122}
+  - {fileID: 274925858}
+  - {fileID: 195144099}
+  spawnHeading: {fileID: 274925858}
