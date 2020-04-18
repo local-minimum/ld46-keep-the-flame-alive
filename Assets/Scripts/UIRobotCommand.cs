@@ -2,9 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
-public class UIRobotCommand : MonoBehaviour
+[RequireComponent(typeof(Image))]
+public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeginDragHandler
 {
+    UIRemoteFeed feed;
+
     [SerializeField]
     int feedPosition;
 
@@ -14,6 +18,18 @@ public class UIRobotCommand : MonoBehaviour
         {
             return gameObject.activeSelf && feedPosition == 0;
         }
+    }
+    public int FeedPosition
+    {
+        get
+        {
+            return feedPosition;
+        }
+    }
+
+    public bool Occupies(int position)
+    {
+        return gameObject.activeSelf && feedPosition == position && !beingPulled;
     }
 
     [SerializeField]
@@ -40,7 +56,7 @@ public class UIRobotCommand : MonoBehaviour
         }
     }
 
-    Vector2 targetAnchoredPosition
+    public Vector2 targetAnchoredPosition
     {
         get
         {
@@ -64,11 +80,14 @@ public class UIRobotCommand : MonoBehaviour
         gameObject.SetActive(true);
     }
 
-    public void SnapToPosition(int position)
+    public void SnapToPosition(int position, bool forceSnap = false)
     {
         feedPosition = position;
-        RectTransform t = (transform as RectTransform);
-        t.anchoredPosition = targetAnchoredPosition;
+        if (!beingPulled || forceSnap)
+        {
+            RectTransform t = (transform as RectTransform);
+            t.anchoredPosition = targetAnchoredPosition;
+        }
     }
 
     public void SnapToPosition()
@@ -85,7 +104,7 @@ public class UIRobotCommand : MonoBehaviour
 
     public int ShiftLeft()
     {
-        if (beingPulled) return feedPosition;
+        if (feedPosition == 0) return feedPosition;
         SnapToPosition(feedPosition - 1);
         return feedPosition;
     }
@@ -93,5 +112,35 @@ public class UIRobotCommand : MonoBehaviour
     public void PlayCard()
     {
         gameObject.SetActive(false);
+    }
+
+    Vector2 dragOffset;
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (isNextInFeed) return;
+        dragOffset += new Vector2(eventData.delta.x, 0);
+        RectTransform t = (transform as RectTransform);
+        t.anchoredPosition = targetAnchoredPosition + dragOffset;
+    }
+
+
+    public void OnEndDrag(PointerEventData eventData)
+    {        
+        feed.InjectDraggedCard(this);
+        beingPulled = false;
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (isNextInFeed) return;
+        dragOffset = Vector2.up * 20f;
+        beingPulled = true;
+        transform.SetAsLastSibling();        
+    }
+
+    private void Start()
+    {
+        feed = GetComponentInParent<UIRemoteFeed>();
     }
 }
