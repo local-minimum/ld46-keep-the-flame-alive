@@ -6,15 +6,15 @@ public class RobotController : MonoBehaviour
 {
     [SerializeField] Tile spawnTile;
     Tile tile;
-    TileEdge facing;
+    TileEdge heading;
+    bool dead = false;
 
     // Start is called before the first frame update
     void Start()
     {
-        tile = spawnTile;
-        transform.position = tile.RestPosition.position;
-        facing = spawnTile.SpawnHeading;
-        transform.LookAt(facing.transform, Vector3.up);
+        tile = spawnTile;        
+        heading = spawnTile.SpawnHeading;
+        EndWalk();
     }
     
     private void OnEnable()
@@ -27,25 +27,64 @@ public class RobotController : MonoBehaviour
         RemoteController.OnSendCommand -= RemoteController_OnSendCommand;
     }
 
+    void EndWalk()
+    {
+        transform.position = tile.RestPosition.position;
+        transform.LookAt(heading.transform, Vector3.up);
+    }
+
+    private void MoveForward(int steps, float nextCommandInSeconds)
+    {
+        switch (heading.ExitMode)
+        {
+            case TileEdgeMode.Block:
+                //TODO move and retreat.
+                heading.BumpConnected();
+                break;
+            case TileEdgeMode.Allow:
+                tile = heading.ConnectedTile;
+                heading = heading.HeadingAfterPassing;
+                EndWalk();
+                break;
+            case TileEdgeMode.Fall:
+                dead = true;
+                transform.position = heading.transform.position;
+                break;
+        }
+
+        steps--;
+        if (steps > 0 && !dead) MoveForward(steps, nextCommandInSeconds);
+    }
+
     private void RemoteController_OnSendCommand(RobotCommand command, float nextCommandInSeconds)
     {
+        if (dead) return;
         switch (command)
         {
             case RobotCommand.TurnLeftTwo:
-                facing = tile.Left(facing);
-                facing = tile.Left(facing);
+                heading = tile.Left(heading);
+                heading = tile.Left(heading);
                 break;
             case RobotCommand.TurnLeft:
-                facing = tile.Left(facing);
+                heading = tile.Left(heading);
                 break;
             case RobotCommand.TurnRightTwo:
-                facing = tile.Right(facing);
-                facing = tile.Right(facing);
+                heading = tile.Right(heading);
+                heading = tile.Right(heading);
                 break;
             case RobotCommand.TurnRight:
-                facing = tile.Right(facing);
+                heading = tile.Right(heading);
+                break;
+            case RobotCommand.ForwardOne:
+                MoveForward(1, nextCommandInSeconds);
+                break;
+            case RobotCommand.ForwardTwo:
+                MoveForward(2, nextCommandInSeconds);
+                break;
+            case RobotCommand.ForwardThree:
+                MoveForward(3, nextCommandInSeconds);
                 break;
         }
-        transform.LookAt(facing.transform, Vector3.up);
+        transform.LookAt(heading.transform, Vector3.up);
     }
 }

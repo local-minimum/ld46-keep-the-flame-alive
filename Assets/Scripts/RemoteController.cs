@@ -2,20 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum RobotCommand
-{
-    ForwardOne,
-    ForwardTwo,
-    ForwardThree,
-    TurnLeft,
-    TurnLeftTwo,
-    TurnRight,
-    TurnRightTwo,
-    BackupOne,
-    BackupTwo,
-    NONE,
-}
-
 public class RemoteController : MonoBehaviour
 {
     public delegate void SendCommand(RobotCommand command, float nextCommandInSeconds);
@@ -120,6 +106,7 @@ public class RemoteController : MonoBehaviour
 
     private void FlipTrash()
     {
+        Debug.Log("Shuffle Deck!");
         drawDeck.AddRange(trashDeck);
         trashDeck.Clear();
         drawDeck.Shuffle();

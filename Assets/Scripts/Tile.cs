@@ -45,4 +45,21 @@ public class Tile : MonoBehaviour
         }
         throw new MissingComponentException();
     }
+
+    public TileEdge Forward(TileEdge entry)
+    {
+        for (int i = 0; i < entries.Length; i++)
+        {
+            if (entries[i] == entry)
+            {
+                return exits[i];
+            }
+        }
+        throw new MissingComponentException();
+    }
+
+    public void Bump(TileEdge fromDirection)
+    {
+        //TODO: handle burn
+    }
 }
