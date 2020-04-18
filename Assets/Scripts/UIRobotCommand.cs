@@ -7,6 +7,10 @@ using UnityEngine.EventSystems;
 [RequireComponent(typeof(Image))]
 public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeginDragHandler
 {
+    public delegate void RobotCommandGrabEvent(int position);
+    public static event RobotCommandGrabEvent OnGrabRobotCommand;
+    public static event RobotCommandGrabEvent OnReleaseRobotCommand;
+
     UIRemoteFeed feed;
 
     [SerializeField]
@@ -36,6 +40,14 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
     Image image;
 
     bool beingPulled = false;
+
+    public bool Grabbed
+    {
+        get
+        {
+            return beingPulled;
+        }
+    }
 
     int nPositions;
 
@@ -70,7 +82,7 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
             return new Vector2(x + feedPosition * width * positionsFraction / nPositions, 0 );
         }
     }
-    public void Spawn(Sprite sprite, int position, int nPositions)
+    public void SnapToPosition(Sprite sprite, int position, int nPositions)
     {
         feedPosition = position;
         this.nPositions = nPositions;
@@ -126,9 +138,11 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
 
 
     public void OnEndDrag(PointerEventData eventData)
-    {        
-        feed.InjectDraggedCard(this);
+    {
+        int newPosition = feed.GetBestCardPosition(this);
+        feedPosition = newPosition;
         beingPulled = false;
+        OnReleaseRobotCommand?.Invoke(newPosition);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -136,7 +150,8 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
         if (isNextInFeed) return;
         dragOffset = Vector2.up * 20f;
         beingPulled = true;
-        transform.SetAsLastSibling();        
+        transform.SetAsLastSibling();
+        OnGrabRobotCommand?.Invoke(feedPosition);
     }
 
     private void Start()

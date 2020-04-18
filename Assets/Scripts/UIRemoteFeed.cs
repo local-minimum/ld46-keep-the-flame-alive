@@ -18,12 +18,41 @@ public class UIRemoteFeed : MonoBehaviour
     {
         RemoteController.OnDrawCommand += RemoteController_OnDrawCommand;
         RemoteController.OnSendCommand += RemoteController_OnSendCommand;
+        RemoteController.OnSyncCommands += RemoteController_OnSyncCommands;
     }
 
     private void OnDisable()
     {
         RemoteController.OnDrawCommand -= RemoteController_OnDrawCommand;
         RemoteController.OnSendCommand -= RemoteController_OnSendCommand;
+        RemoteController.OnSyncCommands -= RemoteController_OnSyncCommands;
+    }
+
+    private void RemoteController_OnSyncCommands(List<RobotCommand> commands)
+    {
+        Debug.Log(string.Join(", ", commands));
+        int idC = 0;
+        int lc = commands.Count;
+        for (int idF=0, l=feed.Count; idF<l; idF++)
+        {
+            if (feed[idF].Grabbed) continue;
+            if (idC < lc)
+            {
+                RobotCommand command = commands[(int)idC];
+                feed[idF].SnapToPosition(cardSprites[(int) command], idC, feedLength);
+            } else
+            {
+                feed[idF].gameObject.SetActive(false);
+            }
+            idC++;
+        }
+        while (idC < lc)
+        {
+            var card = GetInactiveOrSpawn();
+            RobotCommand command = commands[(int)idC];
+            card.SnapToPosition(cardSprites[(int) command], idC, feedLength);
+            idC++;
+        }
     }
 
     private void RemoteController_OnSendCommand(RobotCommand command, float nextCommandInSeconds)
@@ -48,7 +77,7 @@ public class UIRemoteFeed : MonoBehaviour
     }
 
     [SerializeField] float beforeCardMargin = 10;
-    public void InjectDraggedCard(UIRobotCommand card)
+    public int GetBestCardPosition(UIRobotCommand card)
     {
         float cardX = (card.transform as RectTransform).anchoredPosition.x;
         float bestDelta = -Mathf.Infinity;
@@ -65,38 +94,10 @@ public class UIRemoteFeed : MonoBehaviour
         }
         if (!bestCard)
         {
-            card.SnapToPosition(feedLength - 1);
-            return;
+            return feedLength - 1;
         }
-        int insertPosition = bestCard.FeedPosition;        
-        bool leftMoved = false;
-        for (int i = 1, l=feed.Count; i < feedLength; i++)
-        {
-            Debug.Log(string.Format("{0} {1} {2}", insertPosition, leftMoved, i));
-            if (i == insertPosition && leftMoved) break;
-            for (int j = 0; j < l; j++)
-            {
-                var fCard = feed[j];
-                Debug.Log(string.Format("Occ {0} {1}!={2} {3}", fCard == card, fCard.FeedPosition, i, !fCard.Occupies(fCard.FeedPosition)));
-                if (fCard == card || fCard.FeedPosition != i || !fCard.Occupies(fCard.FeedPosition)) continue;
-                if (i < insertPosition)
-                {
-                    var newPos = GetLeftmostOpen(fCard.FeedPosition);
-                    Debug.Log(string.Format("Left {0} => {1}", fCard.FeedPosition, newPos));
-                    if (newPos != fCard.FeedPosition)
-                    {
-                        feed[i].SnapToPosition(newPos);
-                        leftMoved = true;
-                    }                    
-                } else
-                {
-                    Debug.Log(string.Format("Right"));
-                    feed[i].ShiftRight();
-                }                
-                break;
-            }
-        }
-        card.SnapToPosition(GetLeftmostOpen(insertPosition), true);
+        int insertPosition = bestCard.FeedPosition;
+        return GetLeftmostOpen(insertPosition);
     }
 
     int GetLeftmostOpen(int slot)
@@ -115,7 +116,7 @@ public class UIRemoteFeed : MonoBehaviour
     {
         this.feedLength = feedLength;
         UIRobotCommand uiCard = GetInactiveOrSpawn();
-        uiCard.Spawn(cardSprites[(int)command], GetLeftmostOpen(feedSlot), feedLength);
+        uiCard.SnapToPosition(cardSprites[(int)command], GetLeftmostOpen(feedSlot), feedLength);
     }
 
     private UIRobotCommand GetInactiveOrSpawn()
