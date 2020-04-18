@@ -6,6 +6,8 @@ public class UIRemoteFeed : MonoBehaviour
 {
     private int feedLength = 9;
 
+    [SerializeField] Transform cardsHolder;
+
     [SerializeField]
     private UIRobotCommand commandPrefab;
 
@@ -30,7 +32,6 @@ public class UIRemoteFeed : MonoBehaviour
 
     private void RemoteController_OnSyncCommands(List<RobotCommand> commands)
     {
-        Debug.Log(string.Join(", ", commands));
         int idC = 0;
         int lc = commands.Count;
         for (int idF=0, l=feed.Count; idF<l; idF++)
@@ -39,7 +40,10 @@ public class UIRemoteFeed : MonoBehaviour
             if (idC < lc)
             {
                 RobotCommand command = commands[(int)idC];
-                feed[idF].SnapToPosition(cardSprites[(int) command], idC, feedLength);
+                if (command != RobotCommand.NONE)
+                {
+                    feed[idF].SnapToPosition(cardSprites[(int)command], idC, feedLength);
+                }                
             } else
             {
                 feed[idF].gameObject.SetActive(false);
@@ -48,15 +52,19 @@ public class UIRemoteFeed : MonoBehaviour
         }
         while (idC < lc)
         {
-            var card = GetInactiveOrSpawn();
             RobotCommand command = commands[(int)idC];
-            card.SnapToPosition(cardSprites[(int) command], idC, feedLength);
+            if (command != RobotCommand.NONE)
+            {
+                var card = GetInactiveOrSpawn();
+                card.SnapToPosition(cardSprites[(int)command], idC, feedLength);
+            }
             idC++;
         }
     }
 
     private void RemoteController_OnSendCommand(RobotCommand command, float nextCommandInSeconds)
     {
+        if (command == RobotCommand.NONE) return;
         for (int i = 0, l = feed.Count; i < l; i++)
         {
             if (feed[i].isNextInFeed)
@@ -82,7 +90,7 @@ public class UIRemoteFeed : MonoBehaviour
         float cardX = (card.transform as RectTransform).anchoredPosition.x;
         float bestDelta = -Mathf.Infinity;
         UIRobotCommand bestCard = null;
-        for (int i = 0, l = feed.Count; i < l; i++)
+        for (int i = 1, l = feed.Count; i < l; i++)
         {
             var fCard = feed[i];
             if (fCard == card || card.isNextInFeed) continue;
@@ -97,7 +105,7 @@ public class UIRemoteFeed : MonoBehaviour
             return feedLength - 1;
         }
         int insertPosition = bestCard.FeedPosition;
-        return GetLeftmostOpen(insertPosition);
+        return Mathf.Max(1, GetLeftmostOpen(insertPosition));
     }
 
     int GetLeftmostOpen(int slot)
@@ -112,11 +120,9 @@ public class UIRemoteFeed : MonoBehaviour
         return 0;
     }
 
-    private void RemoteController_OnDrawCommand(RobotCommand command, int feedSlot, int feedLength)
+    private void RemoteController_OnDrawCommand(List<RobotCommand> commands)
     {
-        this.feedLength = feedLength;
-        UIRobotCommand uiCard = GetInactiveOrSpawn();
-        uiCard.SnapToPosition(cardSprites[(int)command], GetLeftmostOpen(feedSlot), feedLength);
+        RemoteController_OnSyncCommands(commands);
     }
 
     private UIRobotCommand GetInactiveOrSpawn()
@@ -128,7 +134,7 @@ public class UIRemoteFeed : MonoBehaviour
                 return feed[i];
             }
         }
-        var card = Instantiate(commandPrefab, transform, false);
+        var card = Instantiate(commandPrefab, cardsHolder, false);
         feed.Add(card);
         return card;
     }

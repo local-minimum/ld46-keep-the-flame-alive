@@ -6,9 +6,8 @@ public class RemoteController : MonoBehaviour
 {
     public delegate void SendCommand(RobotCommand command, float nextCommandInSeconds);
     public static event SendCommand OnSendCommand;
-    public delegate void DrawCommand(RobotCommand command, int feedSlot, int feedLength);
-    public static event DrawCommand OnDrawCommand;
     public delegate void SyncCommands(List<RobotCommand> commands);
+    public static event SyncCommands OnDrawCommand;
     public static event SyncCommands OnSyncCommands;
 
     [SerializeField]
@@ -90,10 +89,14 @@ public class RemoteController : MonoBehaviour
     private void DrawOne()
     {
         if (drawDeck.Count == 0) FlipTrash();
-        RobotCommand cmd = drawDeck[0];
-        drawDeck.RemoveAt(0);
-        OnDrawCommand?.Invoke(cmd, instructionsFeed.Count, instructionFeedLength);
+        RobotCommand cmd = RobotCommand.NONE;
+        if (instructionsFeed.Count > 0)
+        {
+            cmd = drawDeck[0];
+            drawDeck.RemoveAt(0);
+        }
         instructionsFeed.Add(cmd);
+        OnDrawCommand?.Invoke(instructionsFeed);
     }
 
     private void DrawToFeed()
@@ -121,7 +124,10 @@ public class RemoteController : MonoBehaviour
         }
         RobotCommand cmd = instructionsFeed[0];
         instructionsFeed.RemoveAt(0);
-        trashDeck.Add(cmd);
+        if (cmd != RobotCommand.NONE)
+        {
+            trashDeck.Add(cmd);
+        }
         OnSendCommand?.Invoke(cmd, nextCommandInSeconds);
         DrawToFeed();
     }
@@ -144,7 +150,6 @@ public class RemoteController : MonoBehaviour
             if (robotAlive)
             {
                 ExecuteCommand(nextCommandInSeconds);
-                Debug.Log(string.Join(", ", instructionsFeed));
             }
             yield return new WaitForSeconds(nextCommandInSeconds);
         }

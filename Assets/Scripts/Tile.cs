@@ -31,6 +31,7 @@ public class Tile : MonoBehaviour
                 return exits[i == 0 ? exits.Length - 1 : i - 1];
             }
         }
+        Debug.LogError(string.Format("Looking for Left from {0} on {1}", heading.name, name));
         throw new MissingComponentException();
     }
 
@@ -43,6 +44,7 @@ public class Tile : MonoBehaviour
                 return exits[i == exits.Length - 1 ? 0 : i + 1];
             }
         }
+        Debug.LogError(string.Format("Looking for Right from {0} on {1}", heading.name, name));
         throw new MissingComponentException();
     }
 
@@ -55,7 +57,13 @@ public class Tile : MonoBehaviour
                 return exits[i];
             }
         }
+        Debug.LogError(string.Format("Looking for Forward from {0} on {1}", entry.name, name));
         throw new MissingComponentException();
+    }
+
+    public TileEdge Backward(TileEdge heading)
+    {
+        return Forward(heading);
     }
 
     public void Bump(TileEdge fromDirection)

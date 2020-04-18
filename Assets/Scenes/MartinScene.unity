@@ -893,6 +893,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: RemoteControl
       objectReference: {fileID: 0}
+    - target: {fileID: 8404130741387821385, guid: d085ac12533e0514e85ce2d34327333b,
+        type: 3}
+      propertyPath: processingHertz
+      value: 128
+      objectReference: {fileID: 0}
     - target: {fileID: 8404130741387821386, guid: d085ac12533e0514e85ce2d34327333b,
         type: 3}
       propertyPath: m_LocalPosition.x
