@@ -140,7 +140,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcdfc281bad735f4ca19a2bf19bc4d81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spawnTile: {fileID: 0}
   robotMoveTimeFraction: 0.7
   bumpPositionCurve:
     serializedVersion: 2

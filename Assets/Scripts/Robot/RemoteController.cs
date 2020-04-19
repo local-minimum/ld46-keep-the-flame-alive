@@ -11,7 +11,7 @@ public class RemoteController : MonoBehaviour
     public static event SyncCommands OnSyncCommands;
 
     [SerializeField]
-    private bool robotAlive = true;
+    private bool robotAlive = false;
 
     [SerializeField]
     private int instructionFeedLength = 7;
@@ -32,7 +32,7 @@ public class RemoteController : MonoBehaviour
 
     // Start is called before the first frame update
     void Start()
-    {        
+    {
         StartCoroutine(ExecutionLoop());
     }
 
@@ -40,12 +40,47 @@ public class RemoteController : MonoBehaviour
     {
         UIRobotCommand.OnGrabRobotCommand += UIRobotCommand_OnGrabRobotCommand;
         UIRobotCommand.OnReleaseRobotCommand += UIRobotCommand_OnReleaseRobotCommand;
+        RobotController.OnRobotDeath += RobotController_OnRobotDeath;
+        RobotFactory.OnSpawnRobot += RobotFactory_OnSpawnRobot;
     }
 
     private void OnDisable()
     {
         UIRobotCommand.OnGrabRobotCommand -= UIRobotCommand_OnGrabRobotCommand;
         UIRobotCommand.OnReleaseRobotCommand -= UIRobotCommand_OnReleaseRobotCommand;
+        RobotFactory.OnSpawnRobot -= RobotFactory_OnSpawnRobot;
+    }
+
+    private void RobotFactory_OnSpawnRobot(RobotController robot)
+    {
+        StartCoroutine(ReconnectRobot());
+    }
+
+    IEnumerator<WaitForSeconds> ReconnectRobot()
+    {
+        while (instructionsFeed.Count < instructionFeedLength)
+        {
+            DrawOne();
+            yield return new WaitForSeconds(0.1f);
+        }
+        yield return new WaitForSeconds(0.5f);
+        robotAlive = true;
+    }
+
+    private void RobotController_OnRobotDeath(RobotController robot)
+    {
+        robotAlive = false;
+        StartCoroutine(WipeFeed());
+    }
+
+
+    IEnumerator<WaitForSeconds> WipeFeed() {
+        float flushSpeed = 0.1f;
+        while (instructionsFeed.Count > 0)
+        {
+            ExecuteCommand(flushSpeed, false);
+            yield return new WaitForSeconds(flushSpeed);
+        }
     }
 
     private void UIRobotCommand_OnReleaseRobotCommand(int position)
@@ -115,7 +150,7 @@ public class RemoteController : MonoBehaviour
         drawDeck.Shuffle();
     }
 
-    private void ExecuteCommand(float nextCommandInSeconds)
+    private void ExecuteCommand(float nextCommandInSeconds, bool draw=true)
     {
         if (instructionsFeed.Count == 0)
         {
@@ -129,7 +164,7 @@ public class RemoteController : MonoBehaviour
             trashDeck.Add(cmd);
         }
         OnSendCommand?.Invoke(cmd, nextCommandInSeconds);
-        DrawToFeed();
+        if (draw) DrawToFeed();
     }
 
     [SerializeField] float beforeCardsDelay = 2f;

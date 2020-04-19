@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    [SerializeField] RobotController robot;
+    RobotController robot;
+    RobotFactory factory;
     Vector3 offset;
     Vector3 velocity;
     float minY;
@@ -12,14 +13,49 @@ public class CameraController : MonoBehaviour
     private void Start()
     {
         minY = transform.position.y;
-        offset = transform.position - robot.transform.position;
+    }
+
+    private void OnEnable()
+    {
+        RobotFactory.OnSpawnRobot += RobotFactory_OnSpawnRobot;
+        RobotFactory.OnActivateFactory += RobotFactory_OnActivateFactory;
+    }
+
+    private void OnDisable()
+    {
+        RobotFactory.OnSpawnRobot -= RobotFactory_OnSpawnRobot;
+        RobotFactory.OnActivateFactory -= RobotFactory_OnActivateFactory;
+    }
+
+    private void RobotFactory_OnActivateFactory(RobotFactory factory)
+    {        
+        if (this.factory == null)
+        {
+            offset = transform.position - factory.transform.position;
+        }
+        this.factory = factory;
+    }
+
+    private void RobotFactory_OnSpawnRobot(RobotController robot)
+    {
+        this.robot = robot;
     }
 
     void LateUpdate()
     {
-        Vector3 target = robot.transform.position + offset;
-        target.y = Mathf.Max(target.y, minY);
-        transform.position = Vector3.SmoothDamp(transform.position, target, ref velocity, smoothTime);
-        transform.LookAt(robot.transform);
+        if (robot != null)
+        {
+            Vector3 target = robot.transform.position + offset;
+            target.y = Mathf.Max(target.y, minY);
+            transform.position = Vector3.SmoothDamp(transform.position, target, ref velocity, smoothTime);
+            transform.LookAt(robot.transform);
+        }
+        else if (factory != null)
+        {
+            Vector3 target = factory.transform.position + offset;
+            target.y = Mathf.Max(target.y, minY);
+            transform.position = Vector3.SmoothDamp(transform.position, target, ref velocity, smoothTime);
+            transform.LookAt(factory.transform);
+        }
     }
 }

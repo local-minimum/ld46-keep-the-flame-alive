@@ -5,22 +5,24 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class RobotController : MonoBehaviour
 {
+    public delegate void RobotDeathEvent(RobotController robot);
+    public static event RobotDeathEvent OnRobotDeath;
+
     float moveAnimationDelta = 0.02f;
 
-    [SerializeField] Tile spawnTile;
     Tile tile;
     TileEdge heading;
-    bool dead = false;
+    bool dead = true;
 
     [SerializeField, Range(0, .95f)]
     float robotMoveTimeFraction = 0.8f;
 
-    // Start is called before the first frame update
-    void Start()
+    public void SetSpawn(Tile tile)
     {
-        tile = spawnTile;        
-        heading = spawnTile.SpawnHeading;
+        this.tile = tile;
+        heading = tile.SpawnHeading;
         EndWalk();
+        dead = false;
     }
     
     private void OnEnable()
@@ -46,6 +48,7 @@ public class RobotController : MonoBehaviour
         var rb = GetComponent<Rigidbody>();
         rb.isKinematic = false;
         rb.AddForce(impulse, ForceMode.Impulse);
+        OnRobotDeath?.Invoke(this);
     }
 
     IEnumerator<WaitForSeconds> RotationSequence(TileEdge[] lookAts, float totalDuration)
