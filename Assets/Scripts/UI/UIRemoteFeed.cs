@@ -36,6 +36,7 @@ public class UIRemoteFeed : MonoBehaviour
         int lc = commands.Count;
         for (int idF=0, l=feed.Count; idF<l; idF++)
         {
+            if (feed[idF].BeingPlayed) continue;
             if (feed[idF].Grabbed)
             {
                 feed[idF].SyncGrabbed(held == RobotCommand.NONE ? null : cardSprites[(int)held]);
@@ -73,7 +74,7 @@ public class UIRemoteFeed : MonoBehaviour
         {
             if (feed[i].isNextInFeed)
             {
-                feed[i].PlayCard();
+                feed[i].PlayCard(nextCommandInSeconds);
             }
         }
         for (int i = 1; i < feedLength; i++)

@@ -49,6 +49,7 @@ public class UINextExecute : MonoBehaviour
 
     private void RemoteController_OnSendCommand(RobotCommand command, float nextCommandInSeconds)
     {
+        if (command == RobotCommand.NONE) return;
         StartCoroutine(Progress(nextCommandInSeconds));
     }
 }

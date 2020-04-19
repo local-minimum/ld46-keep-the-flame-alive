@@ -88,6 +88,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   feedPosition: 0
   image: {fileID: 6770115855320296846}
-  zeroMarginLeft: 0.02
+  zeroMarginLeft: 0.01
   zeroMarginRight: 0.02
   positionsFraction: 0.85

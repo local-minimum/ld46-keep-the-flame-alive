@@ -49,11 +49,18 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
         }
     }
 
+    public bool BeingPlayed
+    {
+        get
+        {
+            return feedPosition < 0 && gameObject.activeSelf;
+        }
+    }
 
     public void SyncGrabbed(Sprite sprite)
     {
         beingPulled = sprite != null;
-        if (beingPulled == false) PlayCard();
+        if (beingPulled == false) gameObject.SetActive(false);
         image.sprite = sprite;
     }
 
@@ -82,12 +89,13 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
         {
             float width = containerWidth;
             float x = -(1 - zeroMarginLeft) * width / 2;
-            if (feedPosition == 0)
+            x += (1 + feedPosition) * width * positionsFraction / nPositions;
+            if (feedPosition < 1)
             {
                 return new Vector2(x, 0);
             }
             x += zeroMarginRight * width / 2;
-            return new Vector2(x + feedPosition * width * positionsFraction / nPositions, 0 );
+            return new Vector2(x, 0 );
         }
     }
     public void SnapToPosition(Sprite sprite, int position, int nPositions)
@@ -128,9 +136,16 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
         SnapToPosition(feedPosition - 1);
         return feedPosition;
     }
-
-    public void PlayCard()
+    
+    public void PlayCard(float lifeTime)
     {
+        SnapToPosition(-1);
+        StartCoroutine(RemoveAfter(lifeTime * 0.95f));
+    }
+
+    IEnumerator<WaitForSeconds> RemoveAfter(float time)
+    {
+        yield return new WaitForSeconds(time);
         gameObject.SetActive(false);
     }
 
