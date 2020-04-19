@@ -364,6 +364,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   restPosition: {fileID: 2390813231162634865}
+  tileEffect: 0
   entries:
   - {fileID: 1554915412796960284}
   - {fileID: 1554915413144915613}
@@ -388,7 +389,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d60f14dddc86f541b4f231a53ea559b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  robotPrefab: {fileID: -2944293743410694454, guid: 01ff8e836eb21164298095f4437cd348,
+  robotPrefab: {fileID: 183221210723023984, guid: f0ba3fd6efaef244191a4f325b5ca892,
     type: 3}
   materials:
   - {fileID: 2100000, guid: 560d78a94bf19cf4b89e539904863bb7, type: 2}
