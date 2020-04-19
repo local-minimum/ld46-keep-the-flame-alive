@@ -8,6 +8,8 @@ public class RobotController : MonoBehaviour
     public delegate void RobotDeathEvent(RobotController robot);
     public static event RobotDeathEvent OnRobotDeath;
 
+    Flame flame;
+
     float moveAnimationDelta = 0.02f;
 
     Tile tile;
@@ -27,6 +29,7 @@ public class RobotController : MonoBehaviour
     
     private void OnEnable()
     {
+        flame = GetComponentInChildren<Flame>();
         RemoteController.OnSendCommand += RemoteController_OnSendCommand;
     }
 
@@ -109,17 +112,22 @@ public class RobotController : MonoBehaviour
                     Vector3 toForward = toHeading.transform.position - tile.RestPosition.position;
                     Quaternion qFrom = Quaternion.LookRotation(fromForward, Vector3.up);
                     Quaternion qTo = Quaternion.LookRotation(toForward, Vector3.up);
-
+                    bool flameManaged = false;
                     while (delta < partDuration)
                     {
                         delta = Time.timeSinceLevelLoad - start;
                         float part = delta / partDuration;
+                        if (!flameManaged && part > 0.6f)
+                        {
+                            ManageFlame();
+                            flameManaged = true;
+                        }
                         transform.position = Vector3.Lerp(part < 0.5f ? sourcePos : heading.transform.position, part < 0.5f ? heading.transform.position : tile.RestPosition.position, runPositionCurve.Evaluate(part));
                         transform.rotation = Quaternion.Lerp(qFrom, qTo, delta / partDuration);
                         yield return new WaitForSeconds(moveAnimationDelta);
                     }
                     heading = toHeading;
-                    EndWalk();
+                    EndWalk();                    
                     break;
                 case TileEdgeMode.Fall:
                     while (delta < partDuration)
@@ -164,16 +172,22 @@ public class RobotController : MonoBehaviour
                     Vector3 toForward = heading.transform.position - tile.RestPosition.position;
                     Quaternion qFrom = Quaternion.LookRotation(fromForward, Vector3.up);
                     Quaternion qTo = Quaternion.LookRotation(toForward, Vector3.up);
+                    bool flameManaged = false;
 
                     while (delta < partDuration)
                     {
                         delta = Time.timeSinceLevelLoad - start;
                         float part = delta / partDuration;
+                        if (!flameManaged && part > 0.75f)
+                        {
+                            flameManaged = true;
+                            ManageFlame();
+                        }
                         transform.position = Vector3.Lerp(part < 0.5f ? sourcePos : reverseHeading.transform.position, part < 0.5f ? reverseHeading.transform.position : tile.RestPosition.position, runPositionCurve.Evaluate(part));
                         transform.rotation = Quaternion.Lerp(qFrom, qTo, delta / partDuration);
                         yield return new WaitForSeconds(moveAnimationDelta);
                     }
-                    EndWalk();
+                    EndWalk();  
                     break;
                 case TileEdgeMode.Fall:
                     while (delta < partDuration)
@@ -228,5 +242,21 @@ public class RobotController : MonoBehaviour
                 //TODO: Idle!
                 break;
         }        
+    }
+
+    void ManageFlame()
+    {
+        switch (tile.TileEffect)
+        {
+            case TileEffect.Burning:
+                flame.Inflame();
+                break;
+            case TileEffect.Watery:
+                flame.Douse();
+                break;
+            case TileEffect.Windy:
+                flame.Blow();
+                break;
+        }
     }
 }

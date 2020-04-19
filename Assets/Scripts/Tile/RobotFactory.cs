@@ -100,7 +100,6 @@ public class RobotFactory : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log(string.Format("{0} {1}", other.name, other.GetComponentInParent<RobotController>()));
         if (other.GetComponentInParent<RobotController>() == null) return;
         if (progressIndex > activeProgressIndex)
         {

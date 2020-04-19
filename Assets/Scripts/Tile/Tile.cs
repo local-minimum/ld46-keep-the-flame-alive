@@ -10,13 +10,18 @@ public class Tile : MonoBehaviour
     {
         get { return restPosition; }
     }
+    [SerializeField] TileEffect tileEffect = TileEffect.NONE;
+    public TileEffect TileEffect
+    {
+        get { return tileEffect; }
+    }
+
     [Header("Edges")]
     [SerializeField] TileEdge[] entries;
     [SerializeField] TileEdge[] exits;
     [SerializeField] bool FixEdges;
     [Header("Only relevant for spawning")]
     [SerializeField] TileEdge spawnHeading;
-    
     public TileEdge SpawnHeading
     {
         get { return spawnHeading;  }

@@ -44,9 +44,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   robotAlive: 1
-  instructionFeedLength: 9
+  instructionFeedLength: 8
   processingFramRate: 512
-  processingHertz: 66
-  cardFreqs: 0e0000000a000000060000000a000000060000000a000000060000000800000004000000
+  processingHertz: 128
+  cardFreqs: 0e0000000a00000006000000030000000600000003000000060000000800000004000000
   beforeCardsDelay: 2
   beforeExecutionDelay: 3
