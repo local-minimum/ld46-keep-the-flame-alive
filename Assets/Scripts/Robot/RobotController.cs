@@ -9,6 +9,13 @@ public class RobotController : MonoBehaviour
     public static event RobotDeathEvent OnRobotDeath;
 
     Flame flame;
+    public bool FlameAlive
+    {
+        get
+        {
+            return flame.Burning;
+        }
+    }
 
     float moveAnimationDelta = 0.02f;
 
@@ -31,11 +38,18 @@ public class RobotController : MonoBehaviour
     {
         flame = GetComponentInChildren<Flame>();
         RemoteController.OnSendCommand += RemoteController_OnSendCommand;
+        RemoteController.OnRobotLost += RemoteController_OnRobotLost;
     }
 
     private void OnDisable()
     {
         RemoteController.OnSendCommand -= RemoteController_OnSendCommand;
+        RemoteController.OnRobotLost -= RemoteController_OnRobotLost;
+    }
+
+    private void RemoteController_OnRobotLost()
+    {
+        WalkOverEdge(tile.transform, heading.transform.position - tile.transform.position);
     }
 
     void EndWalk()

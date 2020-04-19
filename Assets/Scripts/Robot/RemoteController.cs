@@ -9,6 +9,8 @@ public class RemoteController : MonoBehaviour
     public delegate void SyncCommands(List<RobotCommand> commands, RobotCommand held);
     public static event SyncCommands OnDrawCommand;
     public static event SyncCommands OnSyncCommands;
+    public delegate void RobotLostEvent();
+    public static event RobotLostEvent OnRobotLost;
 
     [SerializeField]
     private bool robotAlive = false;
@@ -43,6 +45,7 @@ public class RemoteController : MonoBehaviour
         RobotController.OnRobotDeath += RobotController_OnRobotDeath;
         RobotFactory.OnSpawnRobot += RobotFactory_OnSpawnRobot;
         UISelectSpeed.OnChangeSpeed += UISelectSpeed_OnChangeSpeed;
+        Flame.OnFlameChange += Flame_OnFlameChange;
     }
 
     private void OnDisable()
@@ -51,6 +54,13 @@ public class RemoteController : MonoBehaviour
         UIRobotCommand.OnReleaseRobotCommand -= UIRobotCommand_OnReleaseRobotCommand;
         RobotFactory.OnSpawnRobot -= RobotFactory_OnSpawnRobot;
         UISelectSpeed.OnChangeSpeed -= UISelectSpeed_OnChangeSpeed;
+        Flame.OnFlameChange -= Flame_OnFlameChange;
+    }
+    bool robotHasFlame = false;
+
+    private void Flame_OnFlameChange(int intensity)
+    {
+        robotHasFlame = intensity > 0;    
     }
 
     private void UISelectSpeed_OnChangeSpeed(int speed)
@@ -131,7 +141,7 @@ public class RemoteController : MonoBehaviour
     }
 
     private void DrawOne()
-    {
+    {        
         if (drawDeck.Count == 0) FlipTrash();
         RobotCommand cmd = RobotCommand.NONE;
         if (instructionsFeed.Count > 0)
@@ -162,7 +172,7 @@ public class RemoteController : MonoBehaviour
     {
         if (instructionsFeed.Count == 0)
         {
-            Debug.LogWarning("Instructions feed empty, should never happen");
+            OnRobotLost?.Invoke();
             return;
         }
         RobotCommand cmd = instructionsFeed[0];
@@ -192,7 +202,7 @@ public class RemoteController : MonoBehaviour
             float nextCommandInSeconds = (float)processingFramRate / (float)processingHertz;
             if (robotAlive)
             {
-                ExecuteCommand(nextCommandInSeconds);
+                ExecuteCommand(nextCommandInSeconds, robotHasFlame);
             }
             yield return new WaitForSeconds(nextCommandInSeconds);
         }

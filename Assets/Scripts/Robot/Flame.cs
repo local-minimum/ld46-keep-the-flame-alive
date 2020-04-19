@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Flame : MonoBehaviour
 {
+    public delegate void FlameEvent(int intensity);
+    public static event FlameEvent OnFlameChange;
 
     [SerializeField, Range(1, 5)] int maxFlame = 3;
     [SerializeField] int[] emissionRates;
@@ -27,6 +29,7 @@ public class Flame : MonoBehaviour
 
     void SetFlameIntensity()
     {
+        OnFlameChange?.Invoke(flame);
         ParticleSystem ps = GetComponentInChildren<ParticleSystem>();
         var emission = ps.emission;
         if (flame == 0)
@@ -59,5 +62,6 @@ public class Flame : MonoBehaviour
     public void Inflame()
     {
         flame = Mathf.Min(maxFlame, flame + 1);
+        SetFlameIntensity();
     }
 }
