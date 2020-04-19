@@ -146,7 +146,6 @@ public class RemoteController : MonoBehaviour
 
     private void FlipTrash()
     {
-        Debug.Log("Shuffle Deck!");
         drawDeck.AddRange(trashDeck);
         trashDeck.Clear();
         drawDeck.Shuffle();

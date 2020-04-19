@@ -37,9 +37,10 @@ public class TileEdge : MonoBehaviour
         }
     }
 
-    public void BumpConnected()
+    public TileEffect BumpConnected(bool flameBurning)
     {
-        connection?.tile.Bump(connection);
+        if (connection == null) return TileEffect.NONE;
+        return connection.tile.Bump(connection, flameBurning);
     }
 
     public TileEdge HeadingAfterPassing

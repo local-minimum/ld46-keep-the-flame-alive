@@ -76,9 +76,16 @@ public class Tile : MonoBehaviour
         return Forward(heading);
     }
 
-    public void Bump(TileEdge fromDirection)
+    public TileEffect Bump(TileEdge fromDirection, bool flameBurning)
     {
-        //TODO: handle burn
+        if (flameBurning)
+        {
+            var tileFire = GetComponentInChildren<TileFire>();
+            tileFire.StartFire();
+            tileEffect = TileEffect.Burning;
+        }
+        
+        return TileEffect;
     }
 
     float gizmoCubeSize = 0.15f;

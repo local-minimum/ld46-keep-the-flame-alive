@@ -96,14 +96,23 @@ public class RobotController : MonoBehaviour
             switch (heading.ExitMode)
             {
                 case TileEdgeMode.Block:
+                    bool bumped = false;
                     while (delta < partDuration)
                     {
                         delta = Time.timeSinceLevelLoad - start;
-                        transform.position = Vector3.Lerp(sourcePos, heading.transform.position, bumpPositionCurve.Evaluate(delta / partDuration));
+                        float fraction = delta / partDuration;
+                        if (!bumped && fraction > 0.5f)
+                        {
+                            bumped = true;
+                            if (heading.BumpConnected(flame.Burning) == TileEffect.Burning)
+                            {
+                                flame.Inflame();
+                            }
+                        }
+                        transform.position = Vector3.Lerp(sourcePos, heading.transform.position, bumpPositionCurve.Evaluate(fraction));
                         yield return new WaitForSeconds(moveAnimationDelta);
                     }
                     transform.position = sourcePos;
-                    heading.BumpConnected();
                     break;
                 case TileEdgeMode.Allow:
                     tile = heading.ConnectedTile;
@@ -157,6 +166,7 @@ public class RobotController : MonoBehaviour
             switch (reverseHeading.ExitMode)
             {
                 case TileEdgeMode.Block:
+                    bool bumped = false;
                     while (delta < partDuration)
                     {
                         delta = Time.timeSinceLevelLoad - start;
