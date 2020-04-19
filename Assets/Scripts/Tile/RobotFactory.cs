@@ -54,8 +54,13 @@ public class RobotFactory : MonoBehaviour
     private void OnEnable()
     {
         if (!factories.Contains(this)) _factories.Add(this);
-        factoryRenderer.material = materials[IsActiveFactory ? 1 : 0];
+        SetFactoryMaterial();
         RobotController.OnRobotDeath += RobotController_OnRobotDeath;
+    }
+
+    void SetFactoryMaterial()
+    {
+        factoryRenderer.material = materials[IsActiveFactory ? 1 : 0];
     }
 
 
@@ -91,5 +96,24 @@ public class RobotFactory : MonoBehaviour
         var robot = Instantiate(robotPrefab, transform);
         robot.SetSpawn(Tile);
         OnSpawnRobot?.Invoke(robot);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        Debug.Log(string.Format("{0} {1}", other.name, other.GetComponentInParent<RobotController>()));
+        if (other.GetComponentInParent<RobotController>() == null) return;
+        if (progressIndex > activeProgressIndex)
+        {
+            activeProgressIndex = progressIndex;
+            var factories = RobotFactory.factories;
+            int i = 0;
+            while (i < factories.Count)
+            {
+                factories[i].SetFactoryMaterial();
+                i++;
+            }
+            
+            
+        }
     }
 }
