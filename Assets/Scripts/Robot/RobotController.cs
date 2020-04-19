@@ -66,6 +66,7 @@ public class RobotController : MonoBehaviour
         rb.isKinematic = false;
         rb.AddForce(impulse, ForceMode.Impulse);
         OnRobotDeath?.Invoke(this);
+        Destroy(gameObject, 2f);
     }
 
     IEnumerator<WaitForSeconds> RotationSequence(TileEdge[] lookAts, float totalDuration)

@@ -82,19 +82,28 @@ public class RobotFactory : MonoBehaviour
 
     IEnumerator<WaitForSeconds> Respawn()
     {
-        yield return new WaitForSeconds(2f);
-        var robot = Instantiate(robotPrefab, transform);
+        yield return new WaitForSeconds(1.5f);
+        OnActivateFactory?.Invoke(this);
+        yield return new WaitForSeconds(0.5f);
+        var anim = GetComponent<Animator>();
+        anim.SetTrigger("Spawn");
+        yield return new WaitForSeconds(0.3f);
+        var robot = Instantiate(robotPrefab, transform);        
         robot.SetSpawn(Tile);
+        yield return new WaitForSeconds(0.5f);
         OnSpawnRobot?.Invoke(robot);
     }
 
     IEnumerator<WaitForSeconds> LateStart()
     {
-        yield return new WaitForSeconds(0.5f);
         OnActivateFactory?.Invoke(this);
         yield return new WaitForSeconds(1f);
+        var anim = GetComponent<Animator>();
+        anim.SetTrigger("Spawn");
+        yield return new WaitForSeconds(0.3f);
         var robot = Instantiate(robotPrefab, transform);
         robot.SetSpawn(Tile);
+        yield return new WaitForSeconds(0.5f);
         OnSpawnRobot?.Invoke(robot);
     }
 

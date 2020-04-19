@@ -34,6 +34,7 @@ public class CameraController : MonoBehaviour
             offset = transform.position - factory.transform.position;
         }
         this.factory = factory;
+        this.robot = null;
     }
 
     private void RobotFactory_OnSpawnRobot(RobotController robot)
