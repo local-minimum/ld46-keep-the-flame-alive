@@ -42,6 +42,7 @@ public class RemoteController : MonoBehaviour
         UIRobotCommand.OnReleaseRobotCommand += UIRobotCommand_OnReleaseRobotCommand;
         RobotController.OnRobotDeath += RobotController_OnRobotDeath;
         RobotFactory.OnSpawnRobot += RobotFactory_OnSpawnRobot;
+        UISelectSpeed.OnChangeSpeed += UISelectSpeed_OnChangeSpeed;
     }
 
     private void OnDisable()
@@ -49,6 +50,12 @@ public class RemoteController : MonoBehaviour
         UIRobotCommand.OnGrabRobotCommand -= UIRobotCommand_OnGrabRobotCommand;
         UIRobotCommand.OnReleaseRobotCommand -= UIRobotCommand_OnReleaseRobotCommand;
         RobotFactory.OnSpawnRobot -= RobotFactory_OnSpawnRobot;
+        UISelectSpeed.OnChangeSpeed -= UISelectSpeed_OnChangeSpeed;
+    }
+
+    private void UISelectSpeed_OnChangeSpeed(int speed)
+    {
+        processingHertz = speed;
     }
 
     private void RobotFactory_OnSpawnRobot(RobotController robot)
