@@ -6,7 +6,7 @@ public class RemoteController : MonoBehaviour
 {
     public delegate void SendCommand(RobotCommand command, float nextCommandInSeconds);
     public static event SendCommand OnSendCommand;
-    public delegate void SyncCommands(List<RobotCommand> commands);
+    public delegate void SyncCommands(List<RobotCommand> commands, RobotCommand held);
     public static event SyncCommands OnDrawCommand;
     public static event SyncCommands OnSyncCommands;
 
@@ -75,25 +75,27 @@ public class RemoteController : MonoBehaviour
 
 
     IEnumerator<WaitForSeconds> WipeFeed() {
+        heldCard = RobotCommand.NONE;
+        OnSyncCommands?.Invoke(instructionsFeed, heldCard);
         float flushSpeed = 0.1f;
         while (instructionsFeed.Count > 0)
         {
             ExecuteCommand(flushSpeed, false);
             yield return new WaitForSeconds(flushSpeed);
-        }
+        }        
     }
 
     private void UIRobotCommand_OnReleaseRobotCommand(int position)
     {
         if (heldCard == RobotCommand.NONE)
         {
-            Debug.LogWarning("Trying to insert card but none exists");
+            Debug.LogWarning("Trying to insert card but none exists, maybe held from previous robot");
             return;
         }
 
-        instructionsFeed.Insert(position, heldCard);
+        if (robotAlive && instructionsFeed.Count > position) instructionsFeed.Insert(position, heldCard);
         heldCard = RobotCommand.NONE;
-        OnSyncCommands?.Invoke(instructionsFeed);
+        OnSyncCommands?.Invoke(instructionsFeed, heldCard);
     }
 
     private void UIRobotCommand_OnGrabRobotCommand(int position)
@@ -105,7 +107,7 @@ public class RemoteController : MonoBehaviour
             Debug.LogWarning(string.Format("Picking up a second card {0} while holding {1}", card, heldCard));
         }
         heldCard = card;
-        OnSyncCommands?.Invoke(instructionsFeed);
+        OnSyncCommands?.Invoke(instructionsFeed, heldCard);
 
     }
 
@@ -131,7 +133,7 @@ public class RemoteController : MonoBehaviour
             drawDeck.RemoveAt(0);
         }
         instructionsFeed.Add(cmd);
-        OnDrawCommand?.Invoke(instructionsFeed);
+        OnDrawCommand?.Invoke(instructionsFeed, heldCard);
     }
 
     private void DrawToFeed()

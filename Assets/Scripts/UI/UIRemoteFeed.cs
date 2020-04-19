@@ -30,13 +30,17 @@ public class UIRemoteFeed : MonoBehaviour
         RemoteController.OnSyncCommands -= RemoteController_OnSyncCommands;
     }
 
-    private void RemoteController_OnSyncCommands(List<RobotCommand> commands)
+    private void RemoteController_OnSyncCommands(List<RobotCommand> commands, RobotCommand held)
     {
         int idC = 0;
         int lc = commands.Count;
         for (int idF=0, l=feed.Count; idF<l; idF++)
         {
-            if (feed[idF].Grabbed) continue;
+            if (feed[idF].Grabbed)
+            {
+                feed[idF].SyncGrabbed(held == RobotCommand.NONE ? null : cardSprites[(int)held]);
+                continue;
+            }
             if (idC < lc)
             {
                 RobotCommand command = commands[(int)idC];
@@ -120,9 +124,9 @@ public class UIRemoteFeed : MonoBehaviour
         return 0;
     }
 
-    private void RemoteController_OnDrawCommand(List<RobotCommand> commands)
+    private void RemoteController_OnDrawCommand(List<RobotCommand> commands, RobotCommand held)
     {
-        RemoteController_OnSyncCommands(commands);
+        RemoteController_OnSyncCommands(commands, held);
     }
 
     private UIRobotCommand GetInactiveOrSpawn()

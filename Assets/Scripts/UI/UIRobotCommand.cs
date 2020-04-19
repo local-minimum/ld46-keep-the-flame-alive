@@ -49,6 +49,14 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
         }
     }
 
+
+    public void SyncGrabbed(Sprite sprite)
+    {
+        beingPulled = sprite != null;
+        if (beingPulled == false) PlayCard();
+        image.sprite = sprite;
+    }
+
     int nPositions;
 
     [SerializeField]
@@ -130,19 +138,21 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (isNextInFeed) return;
+        if (isNextInFeed || !beingPulled) return;
         dragOffset += new Vector2(eventData.delta.x, 0);
         RectTransform t = (transform as RectTransform);
         t.anchoredPosition = targetAnchoredPosition + dragOffset;
     }
 
-
     public void OnEndDrag(PointerEventData eventData)
     {
-        int newPosition = feed.GetBestCardPosition(this);
-        feedPosition = newPosition;
-        beingPulled = false;
-        OnReleaseRobotCommand?.Invoke(newPosition);
+        if (beingPulled)
+        {
+            int newPosition = feed.GetBestCardPosition(this);
+            feedPosition = newPosition;
+            beingPulled = false;
+            OnReleaseRobotCommand?.Invoke(newPosition);
+        }
     }
 
     public void OnBeginDrag(PointerEventData eventData)
