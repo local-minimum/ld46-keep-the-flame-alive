@@ -181,7 +181,6 @@ public class RobotController : MonoBehaviour
             switch (reverseHeading.ExitMode)
             {
                 case TileEdgeMode.Block:
-                    bool bumped = false;
                     while (delta < partDuration)
                     {
                         delta = Time.timeSinceLevelLoad - start;
@@ -224,6 +223,7 @@ public class RobotController : MonoBehaviour
                     WalkOverEdge(reverseHeading.transform, reverseHeading.transform.position - sourcePos);
                     break;
             }
+            if (dead) break;
         }
     }
 
