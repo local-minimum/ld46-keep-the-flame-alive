@@ -25,7 +25,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 195144097}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 0, z: 0}
+  m_LocalPosition: {x: 0.75, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 8142547839073586573}
@@ -45,6 +45,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   connection: {fileID: 0}
   entryMode: 0
+  connectToleranceSq: 0.05
+  disconnectToleranceSq: 0.1
 --- !u!1 &457069120
 GameObject:
   m_ObjectHideFlags: 0
@@ -70,7 +72,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 457069120}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 0, z: 0}
+  m_LocalPosition: {x: -0.75, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 8142547839073586573}
@@ -90,6 +92,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   connection: {fileID: 0}
   entryMode: 0
+  connectToleranceSq: 0.05
+  disconnectToleranceSq: 0.1
 --- !u!1 &1471224427
 GameObject:
   m_ObjectHideFlags: 0
@@ -115,7 +119,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1471224427}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.5}
+  m_LocalPosition: {x: 0, y: 0, z: -0.75}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 8142547839073586573}
@@ -135,6 +139,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   connection: {fileID: 0}
   entryMode: 0
+  connectToleranceSq: 0.05
+  disconnectToleranceSq: 0.1
 --- !u!1 &3990153087474100801
 GameObject:
   m_ObjectHideFlags: 0
@@ -190,7 +196,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5604612889478888993}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.5}
+  m_LocalPosition: {x: 0, y: 0, z: 0.75}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 8142547839073586573}
@@ -210,6 +216,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   connection: {fileID: 0}
   entryMode: 0
+  connectToleranceSq: 0.05
+  disconnectToleranceSq: 0.1
 --- !u!1 &8142547838417971408
 GameObject:
   m_ObjectHideFlags: 0
@@ -238,7 +246,7 @@ Transform:
   m_GameObject: {fileID: 8142547838417971408}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0.05, z: 0}
-  m_LocalScale: {x: 1, y: 0.1, z: 1}
+  m_LocalScale: {x: 1.5, y: 0.1, z: 1.5}
   m_Children: []
   m_Father: {fileID: 8142547839073586573}
   m_RootOrder: 0
@@ -353,6 +361,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   restPosition: {fileID: 3799336741650388303}
+  tileEffect: 0
   entries:
   - {fileID: 274925858}
   - {fileID: 195144099}
@@ -363,4 +372,5 @@ MonoBehaviour:
   - {fileID: 457069122}
   - {fileID: 274925858}
   - {fileID: 195144099}
+  FixEdges: 0
   spawnHeading: {fileID: 274925858}
