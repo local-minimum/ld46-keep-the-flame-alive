@@ -4,19 +4,26 @@ using UnityEngine;
 
 public class TileFire : MonoBehaviour
 {
-    [SerializeField] bool startOnFire = false;
+    [SerializeField] bool onFire = false;
+    [SerializeField] ParticleSystem fire;
+    [SerializeField] ParticleSystem smoke;
 
     private void Start()
     {
-        var ps = GetComponentInChildren<ParticleSystem>();
-        var emission = ps.emission;
-        emission.enabled = startOnFire;
+        SetParticles();
     }
 
     public void StartFire()
     {
-        var ps = GetComponentInChildren<ParticleSystem>();
-        var emission = ps.emission;
-        emission.enabled = true;
+        onFire = true;
+        SetParticles();
+    }
+
+    void SetParticles()
+    {
+        var emission = fire.emission;
+        emission.enabled = onFire;
+        emission = smoke.emission;
+        emission.enabled = !onFire;
     }
 }
