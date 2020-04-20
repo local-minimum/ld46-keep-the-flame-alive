@@ -19,7 +19,7 @@ public class Tile : MonoBehaviour
     [Header("Edges")]
     [SerializeField] TileEdge[] entries;
     [SerializeField] TileEdge[] exits;
-    [SerializeField] bool FixEdges;
+    //[SerializeField] bool FixEdges;
     [Header("Only relevant for spawning")]
     [SerializeField] TileEdge spawnHeading;
     public TileEdge SpawnHeading
@@ -135,7 +135,8 @@ public class Tile : MonoBehaviour
         }
         Gizmos.DrawCube(RestPosition.position, Vector3.one * gizmoCubeSize);
     }
-#if UNITY_EDITOR
+
+    /*
     private void FixEdgeConnections()
     {
         for (int i=0, l=entries.Length; i<l; i++)
@@ -150,11 +151,16 @@ public class Tile : MonoBehaviour
 
     private void Update()
     {
+        /*
+#if UNITY_EDITOR
         if (FixEdges)
         {
             FixEdges = false;
             FixEdgeConnections();            
         }
-    }
 #endif
+       
+    }
+
+    */
 }

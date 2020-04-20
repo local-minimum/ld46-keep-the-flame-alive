@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TileEdge : MonoBehaviour
 {
-    [SerializeField] TileEdge connection;
+    TileEdge _connection;
     [SerializeField] TileEdgeMode entryMode = TileEdgeMode.Allow;
     Tile _tile;
     Tile tile
@@ -21,17 +21,36 @@ public class TileEdge : MonoBehaviour
 
     public Tile ConnectedTile
     {
-        get { return connection?.tile; }
+        get { return Connection?.tile; }
     }
     public TileEdge Connection
     {
-        get { return connection; }
+        get {
+            if (_connection == null)
+            {
+                var edges = FindObjectsOfType<TileEdge>();
+                for (int i = 0; i < edges.Length; i++)
+                {
+                    if (edges[i] == this || (edges[i].transform.position - transform.position).sqrMagnitude > connectToleranceSq) continue;
+                    edges[i].Connection = this;
+                    _connection = edges[i];
+                    break;
+                }
+            }
+            return _connection;
+        }
+
+        private set
+        {
+            _connection = value;
+        }
     }
 
     public TileEdgeMode ExitMode
     {
         get
         {
+            var connection = Connection;
             if (entryMode == TileEdgeMode.Block) return TileEdgeMode.Block;
             if (connection == null) return TileEdgeMode.Fall;            
             return connection.entryMode;
@@ -40,26 +59,32 @@ public class TileEdge : MonoBehaviour
 
     public TileEffect BumpConnected(bool flameBurning)
     {
+        var connection = Connection;
         if (connection == null) return TileEffect.NONE;
-        return connection.tile.Bump(connection, flameBurning);
+        return connection.tile.Bump(Connection, flameBurning);
     }
 
     public TileEdge HeadingAfterPassing
     {
         get
         {
+            var connection = Connection;
             return connection?.tile.Forward(connection);
         }
     }
 
-#if UNITY_EDITOR
+
     [Header("Autoconnect")]
     [SerializeField]
     float connectToleranceSq = 0.05f;
+    /*
     [SerializeField]
     float disconnectToleranceSq = 0.1f;
+    
+    
     public void AutoConnect()
     {
+        var connection = Connection;
         if (connection != null)
         {
             if ((transform.position - connection.transform.position).sqrMagnitude > disconnectToleranceSq)
@@ -78,5 +103,5 @@ public class TileEdge : MonoBehaviour
             }
         }
     }
-#endif
+    */
 }

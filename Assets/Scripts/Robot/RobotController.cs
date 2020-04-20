@@ -85,6 +85,7 @@ public class RobotController : MonoBehaviour
         float partDuration = duration / (lookAts.Length - 1);
         for (int from = 0, to = 1; to < lookAts.Length; from++, to++)
         {
+            if (reachedGoal) break;
             float delta = 0;
             float start = Time.timeSinceLevelLoad;
             Vector3 fromForward = lookAts[from].transform.position - transform.position;
@@ -116,6 +117,7 @@ public class RobotController : MonoBehaviour
         float partDuration = duration / steps;
         for (int step = 0; step < steps; step++)
         {
+            if (reachedGoal) break;
             float start = Time.timeSinceLevelLoad;
             float delta = 0;
             Vector3 sourcePos = transform.position;
@@ -185,6 +187,7 @@ public class RobotController : MonoBehaviour
         float partDuration = duration / steps;
         for (int step = 0; step < steps; step++)
         {
+            if (reachedGoal) break;
             TileEdge reverseHeading = tile.Backward(heading);
             float start = Time.timeSinceLevelLoad;
             float delta = 0;

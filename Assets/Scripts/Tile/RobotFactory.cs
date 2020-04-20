@@ -15,7 +15,7 @@ public class RobotFactory : MonoBehaviour
     [SerializeField] MeshRenderer[] ringRenderers;
     [SerializeField] int progressIndex;
 
-    static int activeProgressIndex = 8;
+    static int activeProgressIndex = 0;
     static List<RobotFactory> _factories;
 
     public bool IsActiveFactory

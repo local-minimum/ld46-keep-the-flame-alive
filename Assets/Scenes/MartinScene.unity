@@ -29059,11 +29059,35 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 792356223}
     m_Modifications:
+    - target: {fileID: 281403976, guid: ad28dc3c12354e941987aabcee71486f, type: 3}
+      propertyPath: m_Center.z
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 800590633996570775, guid: ad28dc3c12354e941987aabcee71486f,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1.0599976
+      objectReference: {fileID: 0}
     - target: {fileID: 3530023105020064671, guid: ad28dc3c12354e941987aabcee71486f,
         type: 3}
       propertyPath: connection
       value: 
       objectReference: {fileID: 1982977805}
+    - target: {fileID: 3530023105020064671, guid: ad28dc3c12354e941987aabcee71486f,
+        type: 3}
+      propertyPath: entryMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3530023105973346515, guid: ad28dc3c12354e941987aabcee71486f,
+        type: 3}
+      propertyPath: FixEdges
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4029640568363144834, guid: ad28dc3c12354e941987aabcee71486f,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.46
+      objectReference: {fileID: 0}
     - target: {fileID: 4754971425978082430, guid: ad28dc3c12354e941987aabcee71486f,
         type: 3}
       propertyPath: m_Name
@@ -29124,6 +29148,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5048060770419496918, guid: ad28dc3c12354e941987aabcee71486f,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1.0599976
+      objectReference: {fileID: 0}
+    - target: {fileID: 5343560637840144719, guid: ad28dc3c12354e941987aabcee71486f,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1.06
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ad28dc3c12354e941987aabcee71486f, type: 3}
 --- !u!1001 &1554915412462461640
@@ -29156,7 +29190,7 @@ PrefabInstance:
     - target: {fileID: 7247434511543364274, guid: f05b83953fe380f4aaf736c4feb5020b,
         type: 3}
       propertyPath: m_Name
-      value: RobotFactory
+      value: RobotFactory Start
       objectReference: {fileID: 0}
     - target: {fileID: 7247434511543364275, guid: f05b83953fe380f4aaf736c4feb5020b,
         type: 3}

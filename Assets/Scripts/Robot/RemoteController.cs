@@ -202,7 +202,8 @@ public class RemoteController : MonoBehaviour
         {
             trashDeck.Add(cmd);
         }
-        OnSendCommand?.Invoke(cmd, nextCommandInSeconds);
+        
+        if (!reachedGoal) OnSendCommand?.Invoke(cmd, nextCommandInSeconds);
         if (draw) DrawToFeed();
     }
 
