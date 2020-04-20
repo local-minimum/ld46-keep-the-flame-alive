@@ -288,9 +288,7 @@ public class RobotController : MonoBehaviour
     [SerializeField] string[] flameMsgs;
     [SerializeField] string[] waterMsgs;
     [SerializeField] string[] windMsgs;
-    int idxFlame;
-    int idxWater;
-    int idxWind;
+
 
     void ManageFlame()
     {
@@ -298,21 +296,15 @@ public class RobotController : MonoBehaviour
         {
             case TileEffect.Burning:
                 flame.Inflame();
-                OnRobotMessage?.Invoke(flameMsgs[idxFlame]);
-                idxFlame++;
-                if (idxFlame >= flameMsgs.Length) idxFlame = 0;
+                OnRobotMessage?.Invoke(flameMsgs[Random.Range(0, flameMsgs.Length)]);
                 break;
             case TileEffect.Watery:
                 flame.Douse();
-                OnRobotMessage?.Invoke(waterMsgs[idxWater]);
-                idxWater++;
-                if (idxWater >= waterMsgs.Length) idxWater = 0;
+                OnRobotMessage?.Invoke(waterMsgs[Random.Range(0, waterMsgs.Length)]);
                 break;
             case TileEffect.Windy:
                 flame.Blow();
-                OnRobotMessage?.Invoke(windMsgs[idxWind]);
-                idxWind++;
-                if (idxWind >= windMsgs.Length) idxWind = 0;
+                OnRobotMessage?.Invoke(windMsgs[Random.Range(0, windMsgs.Length)]);
                 break;
         }
     }

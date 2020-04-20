@@ -10,15 +10,21 @@ public class GoalTile : MonoBehaviour
     [SerializeField] ParticleSystem firstFire;
     [SerializeField] ParticleSystem secondFire;
     [SerializeField] ParticleSystem thirdFire;
+    [SerializeField] ParticleSystem[] circles;
 
     private void Start()
     {
-        var emisson = firstFire.emission;
-        emisson.enabled = false;
-        emisson = secondFire.emission;
-        emisson.enabled = false;
-        emisson = thirdFire.emission;
-        emisson.enabled = false;            
+        var emission = firstFire.emission;
+        emission.enabled = false;
+        emission = secondFire.emission;
+        emission.enabled = false;
+        emission = thirdFire.emission;
+        emission.enabled = false; 
+        for (int i =0; i<circles.Length;i++)
+        {
+            emission = circles[i].emission;
+            emission.enabled = false;
+        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -41,5 +47,10 @@ public class GoalTile : MonoBehaviour
         emisson = thirdFire.emission;
         emisson.enabled = true;
         yield return new WaitForSeconds(1f);
+        for (int i = 0; i<circles.Length; i++)
+        {
+            emisson = circles[i].emission;
+            emisson.enabled = true;
+        }
     }
 }

@@ -4991,10 +4991,22 @@ MonoBehaviour:
     m_RotationOrder: 4
   flameMsgs:
   - Respect nature, with fire
+  - Let there be light!
+  - The Fire must grow
+  - The Flame must spread
+  - The Fire must live on
+  - Sacred rings, protect this fire!
+  - The humans will be so happy when I bring them the Fire
   waterMsgs:
-  - 
+  - Water! The enemy of Fire!
+  - Drowning!
+  - Noooooooo...
+  - My poor innocent flame...
   windMsgs:
-  - Keep the flame alive
+  - Wind! I must protect the Fire.
+  - Hateful winds!
+  - My poor innocent flame...
+  - Lousy invisible element
 --- !u!1001 &357351645626029101
 PrefabInstance:
   m_ObjectHideFlags: 0

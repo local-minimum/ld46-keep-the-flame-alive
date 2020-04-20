@@ -6,6 +6,9 @@ ModelImporter:
   - first:
       74: -3880581976594992817
     second: ArmatureAction
+  - first:
+      74: -5251721448815100708
+    second: Idle1.001
   externalObjects: {}
   materials:
     materialImportMode: 1
@@ -35,8 +38,8 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: ArmatureAction
-      takeName: ArmatureAction
+      name: Idle1.001
+      takeName: Idle1.001
       internalID: 0
       firstFrame: 0
       lastFrame: 29
