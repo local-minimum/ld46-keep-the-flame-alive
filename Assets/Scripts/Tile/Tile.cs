@@ -81,8 +81,11 @@ public class Tile : MonoBehaviour
         if (flameBurning)
         {
             var tileFire = GetComponentInChildren<TileFire>();
-            tileFire.StartFire();
-            tileEffect = TileEffect.Burning;
+            if (tileFire)
+            {
+                tileFire.StartFire();
+                tileEffect = TileEffect.Burning;
+            }
         }
         
         return TileEffect;
