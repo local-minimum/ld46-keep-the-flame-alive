@@ -32,8 +32,8 @@ public class TileEdge : MonoBehaviour
     {
         get
         {
-            if (connection == null) return TileEdgeMode.Fall;
             if (entryMode == TileEdgeMode.Block) return TileEdgeMode.Block;
+            if (connection == null) return TileEdgeMode.Fall;            
             return connection.entryMode;
         }
     }

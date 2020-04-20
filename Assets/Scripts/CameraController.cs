@@ -6,7 +6,8 @@ public class CameraController : MonoBehaviour
 {
     RobotController robot;
     RobotFactory factory;
-    Vector3 offset;
+
+    [SerializeField] Vector3 offset;
     Vector3 velocity;
     float minY;
     [SerializeField] float smoothTime = 0.5f;
@@ -32,10 +33,6 @@ public class CameraController : MonoBehaviour
 
     private void RobotFactory_OnActivateFactory(RobotFactory factory)
     {        
-        if (this.factory == null)
-        {
-            offset = transform.position - factory.transform.position;
-        }
         this.factory = factory;
         this.robot = null;
     }
