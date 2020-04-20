@@ -47,6 +47,7 @@ public class RemoteController : MonoBehaviour
         UISelectSpeed.OnChangeSpeed += UISelectSpeed_OnChangeSpeed;
         Flame.OnFlameChange += Flame_OnFlameChange;
         UIDisconnect.OnDisconnectRobot += UIDisconnect_OnDisconnectRobot;
+        GoalTile.OnGoalReached += GoalTile_OnGoalReached;
     }
 
     private void OnDisable()
@@ -57,11 +58,19 @@ public class RemoteController : MonoBehaviour
         UISelectSpeed.OnChangeSpeed -= UISelectSpeed_OnChangeSpeed;
         Flame.OnFlameChange -= Flame_OnFlameChange;
         UIDisconnect.OnDisconnectRobot -= UIDisconnect_OnDisconnectRobot;
+        GoalTile.OnGoalReached -= GoalTile_OnGoalReached;
     }
 
+    bool reachedGoal = false;
+    private void GoalTile_OnGoalReached()
+    {
+        reachedGoal = true;
+        StartCoroutine(WipeFeed());
+    }
 
     private void UIDisconnect_OnDisconnectRobot()
     {
+        if (reachedGoal) return;
         StartCoroutine(WipeFeed());
         OnRobotLost?.Invoke();
     }
@@ -80,6 +89,7 @@ public class RemoteController : MonoBehaviour
 
     private void RobotFactory_OnSpawnRobot(RobotController robot)
     {
+        if (reachedGoal) return;
         StartCoroutine(ReconnectRobot());
     }
 
@@ -120,13 +130,14 @@ public class RemoteController : MonoBehaviour
             return;
         }
 
-        if (robotAlive && instructionsFeed.Count > position) instructionsFeed.Insert(position, heldCard);
+        if (robotAlive && !reachedGoal && instructionsFeed.Count > position) instructionsFeed.Insert(position, heldCard);
         heldCard = RobotCommand.NONE;
         OnSyncCommands?.Invoke(instructionsFeed, heldCard);
     }
 
     private void UIRobotCommand_OnGrabRobotCommand(int position)
     {
+        if (reachedGoal || !robotAlive) return;
         RobotCommand card = instructionsFeed[position];
         instructionsFeed.RemoveAt(position);
         if (heldCard != RobotCommand.NONE)

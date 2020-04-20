@@ -7,6 +7,8 @@ public class RobotController : MonoBehaviour
 {
     public delegate void RobotDeathEvent(RobotController robot);
     public static event RobotDeathEvent OnRobotDeath;
+    public delegate void RobotMessageEvent(string msg);
+    public static event RobotMessageEvent OnRobotMessage;
 
     Flame flame;
     public bool FlameAlive
@@ -39,17 +41,25 @@ public class RobotController : MonoBehaviour
         flame = GetComponentInChildren<Flame>();
         RemoteController.OnSendCommand += RemoteController_OnSendCommand;
         RemoteController.OnRobotLost += RemoteController_OnRobotLost;
+        GoalTile.OnGoalReached += GoalTile_OnGoalReached;
     }
 
     private void OnDisable()
     {
         RemoteController.OnSendCommand -= RemoteController_OnSendCommand;
         RemoteController.OnRobotLost -= RemoteController_OnRobotLost;
+        GoalTile.OnGoalReached -= GoalTile_OnGoalReached;
+    }
+
+    bool reachedGoal = false;
+    private void GoalTile_OnGoalReached()
+    {
+        reachedGoal = true;
     }
 
     private void RemoteController_OnRobotLost()
     {
-        if (!dead) WalkOverEdge(tile.transform, heading.transform.position - tile.transform.position);
+        if (!dead && !reachedGoal) WalkOverEdge(tile.transform, heading.transform.position - tile.transform.position);
     }
 
     void EndWalk()
@@ -232,7 +242,7 @@ public class RobotController : MonoBehaviour
 
     private void RemoteController_OnSendCommand(RobotCommand command, float nextCommandInSeconds)
     {
-        if (dead) return;
+        if (dead || reachedGoal) return;
         switch (command)
         {
             case RobotCommand.TurnLeftTwo:
@@ -272,18 +282,34 @@ public class RobotController : MonoBehaviour
         }        
     }
 
+    [SerializeField] string[] flameMsgs;
+    [SerializeField] string[] waterMsgs;
+    [SerializeField] string[] windMsgs;
+    int idxFlame;
+    int idxWater;
+    int idxWind;
+
     void ManageFlame()
     {
         switch (tile.TileEffect)
         {
             case TileEffect.Burning:
                 flame.Inflame();
+                OnRobotMessage?.Invoke(flameMsgs[idxFlame]);
+                idxFlame++;
+                if (idxFlame >= flameMsgs.Length) idxFlame = 0;
                 break;
             case TileEffect.Watery:
                 flame.Douse();
+                OnRobotMessage?.Invoke(waterMsgs[idxWater]);
+                idxWater++;
+                if (idxWater >= waterMsgs.Length) idxWater = 0;
                 break;
             case TileEffect.Windy:
                 flame.Blow();
+                OnRobotMessage?.Invoke(windMsgs[idxWind]);
+                idxWind++;
+                if (idxWind >= windMsgs.Length) idxWind = 0;
                 break;
         }
     }

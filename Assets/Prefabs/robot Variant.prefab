@@ -4989,6 +4989,12 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  flameMsgs:
+  - Respect nature, with fire
+  waterMsgs:
+  - 
+  windMsgs:
+  - Keep the flame alive
 --- !u!1001 &357351645626029101
 PrefabInstance:
   m_ObjectHideFlags: 0
