@@ -91,6 +91,7 @@ public class RobotController : MonoBehaviour
             }
         }        
         heading = lookAts[lookAts.Length -1];
+        ManageFlame();
         transform.LookAt(heading.transform, Vector3.up);
     }
 
@@ -123,6 +124,7 @@ public class RobotController : MonoBehaviour
                             {
                                 flame.Inflame();
                             }
+                            ManageFlame();
                         }
                         transform.position = Vector3.Lerp(sourcePos, heading.transform.position, bumpPositionCurve.Evaluate(fraction));
                         yield return new WaitForSeconds(moveAnimationDelta);
@@ -187,6 +189,7 @@ public class RobotController : MonoBehaviour
                         transform.position = Vector3.Lerp(sourcePos, reverseHeading.transform.position, bumpPositionCurve.Evaluate(delta / partDuration));
                         yield return new WaitForSeconds(moveAnimationDelta);
                     }
+                    ManageFlame();
                     transform.position = sourcePos;
                     break;
                 case TileEdgeMode.Allow:
