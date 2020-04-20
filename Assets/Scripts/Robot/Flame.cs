@@ -39,6 +39,7 @@ public class Flame : MonoBehaviour
         } else
         {
             emission.rateOverTime = emissionRates[flame - 1];
+            emission.enabled = true;
         }
 
 
