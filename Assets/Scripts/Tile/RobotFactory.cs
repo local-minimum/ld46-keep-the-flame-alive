@@ -12,7 +12,7 @@ public class RobotFactory : MonoBehaviour
 
     [SerializeField] RobotController robotPrefab;
     [SerializeField] Material[] materials;
-    [SerializeField] MeshRenderer factoryRenderer;
+    [SerializeField] MeshRenderer[] ringRenderers;
     [SerializeField] int progressIndex;
 
     static int activeProgressIndex;
@@ -60,7 +60,11 @@ public class RobotFactory : MonoBehaviour
 
     void SetFactoryMaterial()
     {
-        factoryRenderer.material = materials[IsActiveFactory ? 1 : 0];
+        for (int i=0; i<ringRenderers.Length; i++)
+        {
+            ringRenderers[i].material = materials[IsActiveFactory ? i + 1 : 0];
+        }
+        
     }
 
 
@@ -87,10 +91,10 @@ public class RobotFactory : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         var anim = GetComponent<Animator>();
         anim.SetTrigger("Spawn");
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(.6f);
         var robot = Instantiate(robotPrefab, transform);        
         robot.SetSpawn(Tile);
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.3f);
         OnSpawnRobot?.Invoke(robot);
     }
 
@@ -100,7 +104,7 @@ public class RobotFactory : MonoBehaviour
         yield return new WaitForSeconds(1f);
         var anim = GetComponent<Animator>();
         anim.SetTrigger("Spawn");
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(0.6f);
         var robot = Instantiate(robotPrefab, transform);
         robot.SetSpawn(Tile);
         yield return new WaitForSeconds(0.5f);
