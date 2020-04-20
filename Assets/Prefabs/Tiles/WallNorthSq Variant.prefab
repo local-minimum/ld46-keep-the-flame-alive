@@ -108,6 +108,11 @@ PrefabInstance:
       propertyPath: entryMode
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 509190366560042864, guid: 60fda56e0aa0ac54388e1930be2aa0d3,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.5
+      objectReference: {fileID: 0}
     - target: {fileID: 8142547839073586572, guid: 60fda56e0aa0ac54388e1930be2aa0d3,
         type: 3}
       propertyPath: m_Name

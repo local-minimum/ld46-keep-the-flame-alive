@@ -49,7 +49,7 @@ public class RobotController : MonoBehaviour
 
     private void RemoteController_OnRobotLost()
     {
-        WalkOverEdge(tile.transform, heading.transform.position - tile.transform.position);
+        if (!dead) WalkOverEdge(tile.transform, heading.transform.position - tile.transform.position);
     }
 
     void EndWalk()

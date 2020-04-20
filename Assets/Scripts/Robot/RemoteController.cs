@@ -46,6 +46,7 @@ public class RemoteController : MonoBehaviour
         RobotFactory.OnSpawnRobot += RobotFactory_OnSpawnRobot;
         UISelectSpeed.OnChangeSpeed += UISelectSpeed_OnChangeSpeed;
         Flame.OnFlameChange += Flame_OnFlameChange;
+        UIDisconnect.OnDisconnectRobot += UIDisconnect_OnDisconnectRobot;
     }
 
     private void OnDisable()
@@ -55,7 +56,16 @@ public class RemoteController : MonoBehaviour
         RobotFactory.OnSpawnRobot -= RobotFactory_OnSpawnRobot;
         UISelectSpeed.OnChangeSpeed -= UISelectSpeed_OnChangeSpeed;
         Flame.OnFlameChange -= Flame_OnFlameChange;
+        UIDisconnect.OnDisconnectRobot -= UIDisconnect_OnDisconnectRobot;
     }
+
+
+    private void UIDisconnect_OnDisconnectRobot()
+    {
+        StartCoroutine(WipeFeed());
+        OnRobotLost?.Invoke();
+    }
+
     bool robotHasFlame = false;
 
     private void Flame_OnFlameChange(int intensity)
