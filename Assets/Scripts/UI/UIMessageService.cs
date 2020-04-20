@@ -10,15 +10,22 @@ public class UIMessageService : MonoBehaviour
     float lastMessage = 0f;
     float lastRobotMessage = 0f;
     [SerializeField] string[] randomMessages;
+    bool reachedGoal = false;
 
     private void OnEnable()
     {
         RobotController.OnRobotMessage += RobotController_OnRobotMessage;
+        GoalTile.OnGoalReached += GoalTile_OnGoalReached;
     }
 
     private void OnDisable()
     {
         RobotController.OnRobotMessage -= RobotController_OnRobotMessage;
+        GoalTile.OnGoalReached -= GoalTile_OnGoalReached;
+    }
+    private void GoalTile_OnGoalReached()
+    {
+        reachedGoal = true;
     }
 
     private void RobotController_OnRobotMessage(string msg)
@@ -48,6 +55,7 @@ public class UIMessageService : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(Random.Range(showTime * 1.5f, showTime * 2.5f));
+            if (reachedGoal) break;
             if (Time.timeSinceLevelLoad - lastMessage > showTime)
             {
                 var msg = randomMessages[Random.Range(0, randomMessages.Length)];
@@ -56,6 +64,7 @@ public class UIMessageService : MonoBehaviour
                 lastMessage = Time.timeSinceLevelLoad;
                 yield return new WaitForSeconds(showTime);
                 if (text.text == msg) ClearMessage();
+                if (reachedGoal) break;
             }
         }
     }

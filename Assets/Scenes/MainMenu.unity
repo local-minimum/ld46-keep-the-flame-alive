@@ -935,6 +935,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: TextButton
       objectReference: {fileID: 0}
+    - target: {fileID: 5654683986807575572, guid: 177a34796f8e4ba42aaf43c4cd18e619,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5654683986807575573, guid: 177a34796f8e4ba42aaf43c4cd18e619,
         type: 3}
       propertyPath: m_LocalPosition.x
