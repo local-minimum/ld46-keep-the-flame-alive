@@ -158,6 +158,7 @@ public class RemoteController : MonoBehaviour
                 drawDeck.Add((RobotCommand)idcmd);
             }
         }
+        Debug.Log(string.Format("Deck size {0}", drawDeck.Count));
         drawDeck.Shuffle();
     }
 
@@ -187,6 +188,7 @@ public class RemoteController : MonoBehaviour
         drawDeck.AddRange(trashDeck);
         trashDeck.Clear();
         drawDeck.Shuffle();
+        Debug.Log(string.Format("Deck size {0} + {1}", drawDeck.Count, instructionsFeed.Count));
     }
 
     private void ExecuteCommand(float nextCommandInSeconds, bool draw=true)

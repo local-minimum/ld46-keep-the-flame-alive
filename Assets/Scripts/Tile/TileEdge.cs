@@ -7,7 +7,7 @@ public class TileEdge : MonoBehaviour
     TileEdge _connection;
     [SerializeField] TileEdgeMode entryMode = TileEdgeMode.Allow;
     Tile _tile;
-    Tile tile
+    public Tile tile
     {
         get
         {

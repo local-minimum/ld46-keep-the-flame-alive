@@ -84,16 +84,26 @@ public class RobotFactory : MonoBehaviour
         if (IsActiveFactory) StartCoroutine(LateStart());
     }
 
+    private void OnDestroy()
+    {
+        if (IsActiveFactory)
+        {
+            robot = null;
+            Destroy(robot);
+        }
+    }
+    static RobotController robot;
+
     IEnumerator<WaitForSeconds> Respawn()
     {
         yield return new WaitForSeconds(1.5f);
+        robot.HideCorpse();
         OnActivateFactory?.Invoke(this);
         yield return new WaitForSeconds(0.5f);
         var anim = GetComponent<Animator>();
         anim.SetTrigger("Spawn");
         yield return new WaitForSeconds(.6f);
-        var robot = Instantiate(robotPrefab, transform);        
-        robot.SetSpawn(Tile);
+        robot.Respawn(Tile);
         yield return new WaitForSeconds(0.3f);
         OnSpawnRobot?.Invoke(robot);
     }
@@ -105,7 +115,7 @@ public class RobotFactory : MonoBehaviour
         var anim = GetComponent<Animator>();
         anim.SetTrigger("Spawn");
         yield return new WaitForSeconds(0.6f);
-        var robot = Instantiate(robotPrefab, transform);
+        robot = Instantiate(robotPrefab, transform);
         robot.SetSpawn(Tile);
         yield return new WaitForSeconds(0.5f);
         OnSpawnRobot?.Invoke(robot);

@@ -21,8 +21,7 @@ public class RobotController : MonoBehaviour
 
     float moveAnimationDelta = 0.02f;
 
-    Tile tile;
-    TileEdge heading;
+    RobotPosition position;
     bool dead = true;
 
     [SerializeField, Range(0, .95f)]
@@ -30,12 +29,28 @@ public class RobotController : MonoBehaviour
 
     public void SetSpawn(Tile tile)
     {
-        this.tile = tile;
-        heading = tile.SpawnHeading;
+        position = RobotPosition.SpawnPosition(tile);
         EndWalk();
         dead = false;
     }
     
+    public void HideCorpse()
+    {
+        gameObject.SetActive(false);
+    }
+
+    public void Respawn(Tile tile)
+    {
+        var rb = GetComponent<Rigidbody>();
+        rb.isKinematic = true;
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        transform.rotation = Quaternion.identity;
+        reachedGoal = false;
+        SetSpawn(tile);
+        gameObject.SetActive(true);
+    }
+
     private void OnEnable()
     {
         flame = GetComponentInChildren<Flame>();
@@ -59,13 +74,22 @@ public class RobotController : MonoBehaviour
 
     private void RemoteController_OnRobotLost()
     {
-        if (!dead && !reachedGoal) WalkOverEdge(tile.transform, heading.transform.position - tile.transform.position);
+        if (dead) return;
+        Vector3 impulse = new Vector3(Random.Range(-1, 1), 0, Random.Range(-1, 1));
+        if (impulse.sqrMagnitude == 0)
+        {
+            impulse = Vector3.forward;
+        } else
+        {
+            impulse.Normalize();
+        }
+        if (!dead && !reachedGoal) WalkOverEdge(transform, impulse);
     }
 
     void EndWalk()
     {
-        transform.position = tile.RestPosition.position;
-        transform.LookAt(heading.transform, Vector3.up);
+        transform.position = position.tile.RestPosition.position;
+        transform.LookAt(position.heading.transform, Vector3.up);
     }
 
     void WalkOverEdge(Transform edge, Vector3 impulse)
@@ -76,13 +100,13 @@ public class RobotController : MonoBehaviour
         rb.isKinematic = false;
         rb.AddForce(impulse, ForceMode.Impulse);
         OnRobotDeath?.Invoke(this);
-        Destroy(gameObject, 2f);
-    }
+    }   
 
     IEnumerator<WaitForSeconds> RotationSequence(TileEdge[] lookAts, float totalDuration)
     {
         float duration = totalDuration * robotMoveTimeFraction;
         float partDuration = duration / (lookAts.Length - 1);
+        position = position.Rotate(lookAts[lookAts.Length - 1]);
         for (int from = 0, to = 1; to < lookAts.Length; from++, to++)
         {
             if (reachedGoal) break;
@@ -99,11 +123,12 @@ public class RobotController : MonoBehaviour
                 delta = Time.timeSinceLevelLoad - start;
                 transform.rotation = Quaternion.Lerp(qFrom, qTo, delta / partDuration);
                 yield return new WaitForSeconds(moveAnimationDelta);
+                if (dead) break;
             }
+            if (dead) break;
         }        
-        heading = lookAts[lookAts.Length -1];
         ManageFlame();
-        transform.LookAt(heading.transform, Vector3.up);
+        transform.LookAt(position.heading.transform, Vector3.up);
     }
 
     [SerializeField] AnimationCurve bumpPositionCurve;
@@ -121,7 +146,7 @@ public class RobotController : MonoBehaviour
             float start = Time.timeSinceLevelLoad;
             float delta = 0;
             Vector3 sourcePos = transform.position;
-            switch (heading.ExitMode)
+            switch (position.heading.ExitMode)
             {
                 case TileEdgeMode.Block:
                     bool bumped = false;
@@ -132,21 +157,34 @@ public class RobotController : MonoBehaviour
                         if (!bumped && fraction > 0.5f)
                         {
                             bumped = true;
-                            if (heading.BumpConnected(flame.Burning) == TileEffect.Burning)
+                            if (position.heading.BumpConnected(flame.Burning) == TileEffect.Burning)
                             {
                                 flame.Inflame();
                             }
                             ManageFlame();
                         }
-                        transform.position = Vector3.Lerp(sourcePos, heading.transform.position, bumpPositionCurve.Evaluate(fraction));
+                        transform.position = Vector3.Lerp(sourcePos, position.heading.transform.position, bumpPositionCurve.Evaluate(fraction));
                         yield return new WaitForSeconds(moveAnimationDelta);
+                        if (dead) break;
                     }
                     transform.position = sourcePos;
                     break;
                 case TileEdgeMode.Allow:
-                    tile = heading.ConnectedTile;
-                    TileEdge toHeading = heading.HeadingAfterPassing;
-                    Vector3 fromForward = heading.transform.position - transform.position;
+                    var tile = position.heading.ConnectedTile;
+                    TileEdge fromHeading = position.heading;
+                    TileEdge toHeading = position.heading.HeadingAfterPassing;
+                    if (toHeading.tile != tile)
+                    {
+                        Debug.LogError(string.Format(
+                            "Trying to move from {0} to {1}, but heading after {2} is on tile {3}",
+                            position.tile.name,
+                            tile.name,
+                            toHeading.name,
+                            toHeading.tile.name
+                        ));
+                    }                    
+                    Vector3 fromForward = position.heading.transform.position - transform.position;
+                    position = new RobotPosition(tile, toHeading);
                     Vector3 toForward = toHeading.transform.position - tile.RestPosition.position;
                     Quaternion qFrom = Quaternion.LookRotation(fromForward, Vector3.up);
                     Quaternion qTo = Quaternion.LookRotation(toForward, Vector3.up);
@@ -160,21 +198,22 @@ public class RobotController : MonoBehaviour
                             ManageFlame();
                             flameManaged = true;
                         }
-                        transform.position = Vector3.Lerp(part < 0.5f ? sourcePos : heading.transform.position, part < 0.5f ? heading.transform.position : tile.RestPosition.position, runPositionCurve.Evaluate(part));
+                        transform.position = Vector3.Lerp(part < 0.5f ? sourcePos : fromHeading.transform.position, part < 0.5f ? fromHeading.transform.position : tile.RestPosition.position, runPositionCurve.Evaluate(part));
                         transform.rotation = Quaternion.Lerp(qFrom, qTo, delta / partDuration);
                         yield return new WaitForSeconds(moveAnimationDelta);
-                    }
-                    heading = toHeading;
-                    EndWalk();                    
+                        if (dead) break;
+                    }                    
+                    if (!dead) EndWalk();                    
                     break;
                 case TileEdgeMode.Fall:
                     while (delta < partDuration)
                     {
                         delta = Time.timeSinceLevelLoad - start;
-                        transform.position = Vector3.Lerp(sourcePos, heading.transform.position, fallPositionCurve.Evaluate(delta / partDuration));
+                        transform.position = Vector3.Lerp(sourcePos, position.heading.transform.position, fallPositionCurve.Evaluate(delta / partDuration));
                         yield return new WaitForSeconds(moveAnimationDelta);
+                        if (dead) break;
                     }
-                    WalkOverEdge(heading.transform, heading.transform.position - sourcePos);
+                    if (!dead) WalkOverEdge(position.heading.transform, position.heading.transform.position - sourcePos);
                     break;
             }
             if (dead) break;
@@ -188,7 +227,7 @@ public class RobotController : MonoBehaviour
         for (int step = 0; step < steps; step++)
         {
             if (reachedGoal) break;
-            TileEdge reverseHeading = tile.Backward(heading);
+            TileEdge reverseHeading = position.tile.Backward(position.heading);
             float start = Time.timeSinceLevelLoad;
             float delta = 0;
             Vector3 sourcePos = transform.position;
@@ -201,13 +240,28 @@ public class RobotController : MonoBehaviour
                         delta = Time.timeSinceLevelLoad - start;
                         transform.position = Vector3.Lerp(sourcePos, reverseHeading.transform.position, bumpPositionCurve.Evaluate(delta / partDuration));
                         yield return new WaitForSeconds(moveAnimationDelta);
+                        if (dead) break;
                     }
-                    ManageFlame();
-                    transform.position = sourcePos;
+                    if (!dead)
+                    {
+                        ManageFlame();
+                        transform.position = sourcePos;
+                    }
                     break;
                 case TileEdgeMode.Allow:
-                    tile = reverseHeading.ConnectedTile;
-                    heading = tile.Backward(reverseHeading.HeadingAfterPassing);                    
+                    var tile = reverseHeading.ConnectedTile;
+                    var heading = tile.Backward(reverseHeading.HeadingAfterPassing);
+                    if (heading.tile != tile)
+                    {
+                        Debug.LogError(string.Format(
+                            "Trying to move from {0} to {1}, but heading after {2} is on tile {3}",
+                            position.tile.name,
+                            tile.name,
+                            heading.name,
+                            heading.tile.name
+                        ));
+                    }
+                    position = new RobotPosition(tile, heading);
                     Vector3 fromForward = transform.position - reverseHeading.transform.position;
                     Vector3 toForward = heading.transform.position - tile.RestPosition.position;
                     Quaternion qFrom = Quaternion.LookRotation(fromForward, Vector3.up);
@@ -226,8 +280,9 @@ public class RobotController : MonoBehaviour
                         transform.position = Vector3.Lerp(part < 0.5f ? sourcePos : reverseHeading.transform.position, part < 0.5f ? reverseHeading.transform.position : tile.RestPosition.position, runPositionCurve.Evaluate(part));
                         transform.rotation = Quaternion.Lerp(qFrom, qTo, delta / partDuration);
                         yield return new WaitForSeconds(moveAnimationDelta);
+                        if (dead) break;
                     }
-                    EndWalk();  
+                    if (!dead) EndWalk();  
                     break;
                 case TileEdgeMode.Fall:
                     while (delta < partDuration)
@@ -235,8 +290,9 @@ public class RobotController : MonoBehaviour
                         delta = Time.timeSinceLevelLoad - start;
                         transform.position = Vector3.Lerp(sourcePos, reverseHeading.transform.position, fallPositionCurve.Evaluate(delta / partDuration));
                         yield return new WaitForSeconds(moveAnimationDelta);
+                        if (dead) break;
                     }
-                    WalkOverEdge(reverseHeading.transform, reverseHeading.transform.position - sourcePos);
+                    if (!dead) WalkOverEdge(reverseHeading.transform, reverseHeading.transform.position - sourcePos);
                     break;
             }
             if (dead) break;
@@ -249,19 +305,19 @@ public class RobotController : MonoBehaviour
         switch (command)
         {
             case RobotCommand.TurnLeftTwo:
-                TileEdge[] lookAts = new TileEdge[3] { heading, tile.Left(heading), tile.Left(heading, 2)};
+                TileEdge[] lookAts = new TileEdge[3] { position.heading, position.tile.Left(position.heading), position.tile.Left(position.heading, 2)};
                 StartCoroutine(RotationSequence(lookAts, nextCommandInSeconds));
                 break;
             case RobotCommand.TurnLeft:
-                lookAts = new TileEdge[2] { heading, tile.Left(heading) };
+                lookAts = new TileEdge[2] { position.heading, position.tile.Left(position.heading) };
                 StartCoroutine(RotationSequence(lookAts, nextCommandInSeconds));
                 break;
             case RobotCommand.TurnRightTwo:
-                lookAts = new TileEdge[3] { heading, tile.Right(heading), tile.Right(heading, 2) };
+                lookAts = new TileEdge[3] { position.heading, position.tile.Right(position.heading), position.tile.Right(position.heading, 2) };
                 StartCoroutine(RotationSequence(lookAts, nextCommandInSeconds));
                 break;
             case RobotCommand.TurnRight:
-                lookAts = new TileEdge[2] { heading, tile.Right(heading) };
+                lookAts = new TileEdge[2] { position.heading, position.tile.Right(position.heading) };
                 StartCoroutine(RotationSequence(lookAts, nextCommandInSeconds));
                 break;
             case RobotCommand.ForwardOne:
@@ -292,7 +348,7 @@ public class RobotController : MonoBehaviour
 
     void ManageFlame()
     {
-        switch (tile.TileEffect)
+        switch (position.tile.TileEffect)
         {
             case TileEffect.Burning:
                 flame.Inflame();

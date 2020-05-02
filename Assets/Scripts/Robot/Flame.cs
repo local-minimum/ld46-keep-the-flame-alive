@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Flame : MonoBehaviour
-{
+{    
     public delegate void FlameEvent(int intensity);
     public static event FlameEvent OnFlameChange;
 
@@ -14,6 +14,21 @@ public class Flame : MonoBehaviour
     int flame;
 
     private void Start()
+    {
+        flame = maxFlame;
+        SetFlameIntensity();
+    }
+
+    private void OnEnable()
+    {
+        RobotFactory.OnSpawnRobot += RobotFactory_OnSpawnRobot;
+    }
+
+    private void OnDisable()
+    {
+        RobotFactory.OnSpawnRobot -= RobotFactory_OnSpawnRobot;
+    }
+    private void RobotFactory_OnSpawnRobot(RobotController robot)
     {
         flame = maxFlame;
         SetFlameIntensity();

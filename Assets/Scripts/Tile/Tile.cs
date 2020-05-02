@@ -41,7 +41,7 @@ public class Tile : MonoBehaviour
                 return exits[i - steps < 0 ? exits.Length + (i - steps)  : i - steps];
             }
         }
-        Debug.LogError(string.Format("Looking for Left from {0} on {1}", heading.name, name));
+        Debug.LogError(string.Format("Looking for Left from {0}:{1} on {2}", heading.name, heading.tile.name , name));
         throw new MissingComponentException();
     }
 
@@ -54,7 +54,7 @@ public class Tile : MonoBehaviour
                 return exits[i + steps >= exits.Length ? i + steps - exits.Length : i + steps];
             }
         }
-        Debug.LogError(string.Format("Looking for Right from {0} on {1}", heading.name, name));
+        Debug.LogError(string.Format("Looking for Right from {0}:{1} on {2}", heading.name, heading.tile.name, name));
         throw new MissingComponentException();
     }
 
@@ -67,7 +67,7 @@ public class Tile : MonoBehaviour
                 return exits[i];
             }
         }
-        Debug.LogError(string.Format("Looking for Forward from {0} on {1}", entry.name, name));
+        Debug.LogError(string.Format("Looking for Forward from {0}:{1} on {2}", entry.name, entry.tile.name, name));
         throw new MissingComponentException();
     }
 
