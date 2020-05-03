@@ -6,8 +6,7 @@ public class RemoteController : MonoBehaviour
 {
     public delegate void SendCommand(RobotCommand command, float nextCommandInSeconds);
     public static event SendCommand OnSendCommand;
-    public delegate void SyncCommands(List<RobotCommand> commands, RobotCommand held);
-    public static event SyncCommands OnDrawCommand;
+    public delegate void SyncCommands(List<ShiftCommand> commands, ShiftCommand held);
     public static event SyncCommands OnSyncCommands;
     public delegate void RobotLostEvent();
     public static event RobotLostEvent OnRobotLost;
@@ -28,9 +27,9 @@ public class RemoteController : MonoBehaviour
     private int[] cardFreqs = new int[9];
 
     private List<RobotCommand> drawDeck = new List<RobotCommand>();
-    private List<RobotCommand> instructionsFeed = new List<RobotCommand>();
+    private List<ShiftCommand> instructionsFeed = new List<ShiftCommand>();
     private List<RobotCommand> trashDeck = new List<RobotCommand>();
-    private RobotCommand heldCard = RobotCommand.NONE;
+    private ShiftCommand heldCard = ShiftCommand.NothingHeld;
 
     // Start is called before the first frame update
     void Start()
@@ -112,8 +111,9 @@ public class RemoteController : MonoBehaviour
 
 
     IEnumerator<WaitForSeconds> WipeFeed() {
-        heldCard = RobotCommand.NONE;
-        OnSyncCommands?.Invoke(instructionsFeed, heldCard);
+        heldCard = ShiftCommand.NothingHeld;
+        
+        //Remove what remains
         float flushSpeed = 0.1f;
         while (instructionsFeed.Count > 0)
         {
@@ -122,31 +122,65 @@ public class RemoteController : MonoBehaviour
         }        
     }
 
-    private void UIRobotCommand_OnReleaseRobotCommand(int position)
+    private void UIRobotCommand_OnReleaseRobotCommand(ShiftCommand command, ShiftCommand insertBefore)
     {
-        if (heldCard == RobotCommand.NONE)
+        if (!robotAlive || reachedGoal) return;
+
+        if (!heldCard.SameAs(command))
         {
-            Debug.LogWarning("Trying to insert card but none exists, maybe held from previous robot");
+            Debug.LogWarning(string.Format("Trying to insert card {0} that doesn't match what is held {1}.", command, heldCard));
             return;
         }
+        bool inserted = false;
+        ShiftCommand insertion = ShiftCommand.NothingHeld;
+        int position = 0;
+        for (int i=0, l=instructionsFeed.Count; i<l; i++)
+        {
+            if (inserted)
+            {
+                instructionsFeed[i] = ShiftCommand.JumpRight(instructionsFeed[i]);
+            } else
+            {
+                if (instructionsFeed[i].SameAs(insertBefore))
+                {
+                    insertion = ShiftCommand.Insert(instructionsFeed[i], command.command);
+                    inserted = true;
+                    position = i;
+                }
+            }
+        }
+        if (inserted)
+        {
+            instructionsFeed.Insert(position, insertion);
+        } else
+        {
+            instructionsFeed.Add(ShiftCommand.MoveLeftFrom(command.command, instructionsFeed.Count));
+        }
 
-        if (robotAlive && !reachedGoal && instructionsFeed.Count > position) instructionsFeed.Insert(position, heldCard);
-        heldCard = RobotCommand.NONE;
+        heldCard = ShiftCommand.NothingHeld;
         OnSyncCommands?.Invoke(instructionsFeed, heldCard);
     }
 
-    private void UIRobotCommand_OnGrabRobotCommand(int position)
+    private void UIRobotCommand_OnGrabRobotCommand(ShiftCommand command, ShiftCommand insertBefore)
     {
-        if (reachedGoal || !robotAlive) return;
-        RobotCommand card = instructionsFeed[position];
-        instructionsFeed.RemoveAt(position);
-        if (heldCard != RobotCommand.NONE)
+        if (reachedGoal || !robotAlive || !insertBefore.Held) return;
+        for (int i=0, l=instructionsFeed.Count; i<l; i++)
         {
-            Debug.LogWarning(string.Format("Picking up a second card {0} while holding {1}", card, heldCard));
+            ShiftCommand card = instructionsFeed[i];
+            if (card.SameAs(command))
+            {
+                instructionsFeed.RemoveAt(i);
+                if (!heldCard.Empty)
+                {
+                    Debug.LogWarning(string.Format("Picking up a second card {0} while holding {1}", card, heldCard));
+                    trashDeck.Add(heldCard.command);
+                }
+                heldCard = ShiftCommand.Pickup(card);
+                SendSynchFeed();
+                return;
+            }
         }
-        heldCard = card;
-        OnSyncCommands?.Invoke(instructionsFeed, heldCard);
-
+        Debug.LogWarning(string.Format("Tried to pickup card {0}, but couldn't find it", command));
     }
 
     private void InitDeck()
@@ -164,20 +198,27 @@ public class RemoteController : MonoBehaviour
 
     private void DrawOne()
     {        
+        // Get new draw deck if needed
         if (drawDeck.Count == 0) FlipTrash();
+
+        // Get the card
         RobotCommand cmd = RobotCommand.NONE;
-        if (instructionsFeed.Count > 0)
+        if (drawDeck.Count > 0)
         {
             cmd = drawDeck[0];
             drawDeck.RemoveAt(0);
         }
-        instructionsFeed.Add(cmd);
-        OnDrawCommand?.Invoke(instructionsFeed, heldCard);
+
+        // Insert card
+        instructionsFeed.Add(ShiftCommand.MoveLeftFrom(cmd, instructionsFeed.Count));
+
+        // Inform subscribers 
+        SendSynchFeed();
     }
 
     private void DrawToFeed()
     {   
-        for (int i=instructionsFeed.Count; i < instructionFeedLength - (heldCard == RobotCommand.NONE ?  0 : 1); i++)
+        for (int i=instructionsFeed.Count; i < instructionFeedLength - (heldCard.Empty ?  0 : 1); i++)
         {
             DrawOne();
         }
@@ -191,6 +232,18 @@ public class RemoteController : MonoBehaviour
         Debug.Log(string.Format("Deck size {0} + {1}", drawDeck.Count, instructionsFeed.Count));
     }
 
+    private void SendSynchFeed()
+    {
+        for (int idx=0,l=instructionsFeed.Count; idx<l; idx++)
+        {
+            if (instructionsFeed[idx].LeftOrOn(idx))
+            {
+                instructionsFeed[idx] = ShiftCommand.MoveLeftFrom(instructionsFeed[idx].command, idx);
+            }
+        }
+        OnSyncCommands?.Invoke(instructionsFeed, heldCard);
+    }
+
     private void ExecuteCommand(float nextCommandInSeconds, bool draw=true)
     {
         if (instructionsFeed.Count == 0)
@@ -198,15 +251,24 @@ public class RemoteController : MonoBehaviour
             OnRobotLost?.Invoke();
             return;
         }
-        RobotCommand cmd = instructionsFeed[0];
+        RobotCommand cmd = instructionsFeed[0].command;
         instructionsFeed.RemoveAt(0);
         if (cmd != RobotCommand.NONE)
         {
             trashDeck.Add(cmd);
         }
-        
-        if (!reachedGoal) OnSendCommand?.Invoke(cmd, nextCommandInSeconds);
-        if (draw) DrawToFeed();
+
+        if (!reachedGoal)
+        {
+            OnSendCommand?.Invoke(cmd, nextCommandInSeconds);
+        }
+        if (draw)
+        {
+            DrawToFeed();
+        } else
+        {
+            SendSynchFeed();
+        }
     }
 
     [SerializeField] float beforeCardsDelay = 2f;

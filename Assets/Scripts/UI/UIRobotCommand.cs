@@ -7,64 +7,27 @@ using UnityEngine.EventSystems;
 [RequireComponent(typeof(Image))]
 public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeginDragHandler
 {
-    public delegate void RobotCommandGrabEvent(int position);
+    public delegate void RobotCommandGrabEvent(ShiftCommand command, ShiftCommand target);
     public static event RobotCommandGrabEvent OnGrabRobotCommand;
     public static event RobotCommandGrabEvent OnReleaseRobotCommand;
 
-    UIRemoteFeed feed;
+    public ShiftCommand shiftCommand { get; private set; }
 
-    [SerializeField]
-    int feedPosition;
-
-    public bool isNextInFeed
+    UIRemoteFeed _feed;
+    UIRemoteFeed feed
     {
         get
         {
-            return gameObject.activeSelf && feedPosition == 0;
+            if (_feed == null)
+            {
+                _feed = GetComponentInParent<UIRemoteFeed>();
+            }
+            return _feed;
         }
-    }
-    public int FeedPosition
-    {
-        get
-        {
-            return feedPosition;
-        }
-    }
-
-    public bool Occupies(int position)
-    {
-        return gameObject.activeSelf && feedPosition == position && !beingPulled;
     }
 
     [SerializeField]
-    Image image;
-
-    bool beingPulled = false;
-
-    public bool Grabbed
-    {
-        get
-        {
-            return beingPulled;
-        }
-    }
-
-    public bool BeingPlayed
-    {
-        get
-        {
-            return feedPosition < 0 && gameObject.activeSelf;
-        }
-    }
-
-    public void SyncGrabbed(Sprite sprite)
-    {
-        beingPulled = sprite != null;
-        if (beingPulled == false) gameObject.SetActive(false);
-        image.sprite = sprite;
-    }
-
-    int nPositions;
+    Image image;    
 
     [SerializeField]
     float zeroMarginLeft = 0.005f;
@@ -89,7 +52,8 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
         {
             float width = containerWidth;
             float x = -(1 - zeroMarginLeft) * width / 2;
-            x += (1 + feedPosition) * width * positionsFraction / nPositions;
+            int feedPosition = shiftCommand.position;
+            x += (1 + feedPosition) * width * positionsFraction / feed.feedFullLength;
             if (feedPosition < 1)
             {
                 return new Vector2(x, 0);
@@ -98,19 +62,9 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
             return new Vector2(x, 0 );
         }
     }
-    public void SnapToPosition(Sprite sprite, int position, int nPositions)
-    {
-        feedPosition = position;
-        this.nPositions = nPositions;
-        image.sprite = sprite;
-        RectTransform t = (transform as RectTransform);
-        t.anchoredPosition = targetAnchoredPosition;
-        gameObject.SetActive(true);
-    }
 
-    public void SnapToPosition(int position, bool forceSnap = false)
-    {
-        feedPosition = position;
+    public void SnapToPosition(bool forceSnap = false)
+    {        
         if (!beingPulled || forceSnap)
         {
             RectTransform t = (transform as RectTransform);
@@ -118,42 +72,46 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
         }
     }
 
-    public void SnapToPosition()
+    public void ShiftRight(ShiftCommand command)
     {
-        SnapToPosition(feedPosition);
+        shiftCommand = command;
+        SnapToPosition(true);        
     }
 
-    public int ShiftRight()
+    public void ShiftLeft(ShiftCommand command)
     {
-        if (beingPulled) return feedPosition;
-        SnapToPosition(feedPosition + 1);
-        return feedPosition;
+        shiftCommand = command;
+        SnapToPosition();
     }
 
-    public int ShiftLeft()
+    public void NotInPlay()
     {
-        if (feedPosition == 0) return feedPosition;
-        SnapToPosition(feedPosition - 1);
-        return feedPosition;
-    }
-    
-    public void PlayCard(float lifeTime)
-    {
-        SnapToPosition(-1);
-        StartCoroutine(RemoveAfter(lifeTime * 0.95f));
-    }
-
-    IEnumerator<WaitForSeconds> RemoveAfter(float time)
-    {
-        yield return new WaitForSeconds(time);
+        shiftCommand = ShiftCommand.NotInPlay;
+        beingPulled = false;
+        SnapToPosition();
         gameObject.SetActive(false);
+    }
+
+    public void SetInPlay(ShiftCommand command)
+    {
+        shiftCommand = command;
+        beingPulled = false;
+        SnapToPosition();
+        gameObject.SetActive(true);
+    }
+
+    public void SetInPlay(ShiftCommand command, Sprite sprite)
+    {
+        image.sprite = sprite;
+        SetInPlay(command);
     }
 
     Vector2 dragOffset;
 
+    bool beingPulled;
     public void OnDrag(PointerEventData eventData)
     {
-        if (isNextInFeed || !beingPulled) return;
+        if (shiftCommand.BeingPlayed || !beingPulled) return;
         dragOffset += new Vector2(eventData.delta.x, 0);
         RectTransform t = (transform as RectTransform);
         t.anchoredPosition = targetAnchoredPosition + dragOffset;
@@ -163,24 +121,18 @@ public class UIRobotCommand : MonoBehaviour, IEndDragHandler, IDragHandler, IBeg
     {
         if (beingPulled)
         {
-            int newPosition = feed.GetBestCardPosition(this);
-            feedPosition = newPosition;
+            ShiftCommand insertBefore = feed.GetBestInsertBeforeCard(this);            
             beingPulled = false;
-            OnReleaseRobotCommand?.Invoke(newPosition);
+            OnReleaseRobotCommand?.Invoke(this.shiftCommand, insertBefore);
         }
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (isNextInFeed) return;
+        if (shiftCommand.BeingPlayed) return;
         dragOffset = Vector2.up * 20f;
         beingPulled = true;
         transform.SetAsLastSibling();
-        OnGrabRobotCommand?.Invoke(feedPosition);
-    }
-
-    private void Start()
-    {
-        feed = GetComponentInParent<UIRemoteFeed>();
-    }
+        OnGrabRobotCommand?.Invoke(shiftCommand, ShiftCommand.NothingHeld);
+    }    
 }

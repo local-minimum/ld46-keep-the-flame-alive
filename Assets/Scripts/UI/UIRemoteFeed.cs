@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class UIRemoteFeed : MonoBehaviour
 {
-    private int feedLength = 9;
+    public int feedFullLength { get; } = 9;
 
     [SerializeField] Transform cardsHolder;
 
@@ -15,132 +15,155 @@ public class UIRemoteFeed : MonoBehaviour
     Sprite[] cardSprites = new Sprite[9];
 
     private List<UIRobotCommand> feed = new List<UIRobotCommand>();
+    private UIRobotCommand heldCard;
+    private List<UIRobotCommand> cardsNotInPlay = new List<UIRobotCommand>();
 
     private void OnEnable()
     {
-        RemoteController.OnDrawCommand += RemoteController_OnDrawCommand;
         RemoteController.OnSendCommand += RemoteController_OnSendCommand;
         RemoteController.OnSyncCommands += RemoteController_OnSyncCommands;
     }
 
     private void OnDisable()
     {
-        RemoteController.OnDrawCommand -= RemoteController_OnDrawCommand;
         RemoteController.OnSendCommand -= RemoteController_OnSendCommand;
         RemoteController.OnSyncCommands -= RemoteController_OnSyncCommands;
     }
 
-    private void RemoteController_OnSyncCommands(List<RobotCommand> commands, RobotCommand held)
+    private void RemoteController_OnSyncCommands(List<ShiftCommand> commands, ShiftCommand held)
     {
         int idC = 0;
-        int lc = commands.Count;
-        for (int idF=0, l=feed.Count; idF<l; idF++)
+        int lC = commands.Count;
+        for (int idF=0, lF=feed.Count; idF<lF; idF++)
         {
-            if (feed[idF].BeingPlayed) continue;
-            if (feed[idF].Grabbed)
+            var command = commands[idC];
+            var card = feed[idF];
+            // Card is where it should be, nothing to do
+            if (card.shiftCommand.SameAs(command))
             {
-                feed[idF].SyncGrabbed(held == RobotCommand.NONE ? null : cardSprites[(int)held]);
+                idC++;
                 continue;
             }
-            if (idC < lc)
+
+            // Card has moved leftward
+            if (card.shiftCommand.SameButShiftedLeft(command))
             {
-                RobotCommand command = commands[(int)idC];
-                if (command != RobotCommand.NONE)
+                card.ShiftLeft(command);
+                idC++;
+                continue;
+            }
+
+            // Card needs to shift rightward
+            if (card.shiftCommand.SameButShiftedRight(command))
+            {
+                card.ShiftRight(command);
+                idC++;
+                continue;
+            }
+
+            // Card is picked up
+            if (card.shiftCommand.SameButPickedUp(held))
+            {
+                if (heldCard != null)
                 {
-                    feed[idF].SnapToPosition(cardSprites[(int)command], idC, feedLength);
-                }                
-            } else
+                    cardsNotInPlay.Add(heldCard);
+                    heldCard.NotInPlay();
+                }
+
+                heldCard = card;
+                feed.RemoveAt(idF);
+                idF--;
+                lF--;
+                idC++;
+                continue;
+            }
+
+            // Actually previously held card is now here
+            if (heldCard != null && command.command == heldCard.shiftCommand.command)
             {
-                feed[idF].gameObject.SetActive(false);
+                heldCard.SetInPlay(command);
+                feed.Insert(idF, heldCard);
+                heldCard = null;
+                lF++;                
+                continue;
+            }
+
+            // Remove card because not in play
+            if (idF > 0)
+            {
+                Debug.LogWarning(string.Format("Lost track of UI Card {0}, this should not happen", card));
+            }            
+            card.NotInPlay();
+            cardsNotInPlay.Add(card);            
+            feed.RemoveAt(idF);
+            idF--;
+            lF--;
+            continue;
+        }
+
+        if (idC != feed.Count)
+        {
+            Debug.LogWarning(string.Format("We have a gap in the feed, it should be {0} long, but is {1}", idC, feed.Count));
+        }
+
+        // Fillout new cards
+        while (idC < lC)
+        {
+            ShiftCommand command = commands[(int)idC];
+            if (!command.Empty)
+            {
+                var card = GetInactiveOrSpawn();
+                card.SetInPlay(command, cardSprites[(int)command.command]);
+                feed.Add(card);
             }
             idC++;
         }
-        while (idC < lc)
+
+        //Deal with held card
+        if (held.Empty && heldCard != null)
         {
-            RobotCommand command = commands[(int)idC];
-            if (command != RobotCommand.NONE)
-            {
-                var card = GetInactiveOrSpawn();
-                card.SnapToPosition(cardSprites[(int)command], idC, feedLength);
-            }
-            idC++;
+            heldCard.NotInPlay();
+            cardsNotInPlay.Add(heldCard);
+            heldCard = null;
+        } else if (!held.Empty && heldCard != null && !held.SameAs(heldCard.shiftCommand))
+        {
+            Debug.LogWarning(string.Format("Held card is wrong, this should not happen, expected {0}, but found {1} (updating)", held, heldCard.shiftCommand));
+            heldCard.SetInPlay(held, cardSprites[(int)held.command]);
         }
     }
 
     private void RemoteController_OnSendCommand(RobotCommand command, float nextCommandInSeconds)
     {
-        if (command == RobotCommand.NONE) return;
-        for (int i = 0, l = feed.Count; i < l; i++)
-        {
-            if (feed[i].isNextInFeed)
-            {
-                feed[i].PlayCard(nextCommandInSeconds);
-            }
-        }
-        for (int i = 1; i < feedLength; i++)
-        {
-            for (int j = 0,l = feed.Count; j<l; j++)
-            {
-                if (feed[j].Occupies(i))
-                {
-                    feed[j].SnapToPosition(GetLeftmostOpen(i));
-                }
-            }
-        }
+        Debug.Log("Not implemented smooth scrolling");
     }
 
     [SerializeField] float beforeCardMargin = 10;
-    public int GetBestCardPosition(UIRobotCommand card)
+    public ShiftCommand GetBestInsertBeforeCard(UIRobotCommand card)
     {
-        float cardX = (card.transform as RectTransform).anchoredPosition.x;
-        float bestDelta = -Mathf.Infinity;
-        UIRobotCommand bestCard = null;
-        for (int i = 1, l = feed.Count; i < l; i++)
+        var cardX = card.transform.position.x + beforeCardMargin;
+        // We can't allow placeing before currently playing card
+        for (int i=1, l=feed.Count; i<l; i++)
         {
-            var fCard = feed[i];
-            if (fCard == card || card.isNextInFeed) continue;
-            var fCardX = fCard.targetAnchoredPosition.x;
-            var delta = cardX - fCardX - beforeCardMargin;
-            if (delta > 0 || delta < bestDelta) continue;
-            bestCard = fCard;
-            bestDelta = delta;
-        }
-        if (!bestCard)
-        {
-            return feedLength - 1;
-        }
-        int insertPosition = bestCard.FeedPosition;
-        return Mathf.Max(1, GetLeftmostOpen(insertPosition));
-    }
-
-    int GetLeftmostOpen(int slot)
-    {
-        for (int pos=slot - 1; pos >= 0; pos--)
-        {
-            for (int fpos=0, l=feed.Count; fpos<l; fpos++)
+            var target = feed[i];
+            if (target.transform.position.x < cardX)
             {
-                if (feed[fpos].Occupies(pos)) return pos + 1;
+                return target.shiftCommand;
             }
         }
-        return 0;
-    }
-
-    private void RemoteController_OnDrawCommand(List<RobotCommand> commands, RobotCommand held)
-    {
-        RemoteController_OnSyncCommands(commands, held);
+        return ShiftCommand.NotInPlay;
     }
 
     private UIRobotCommand GetInactiveOrSpawn()
     {
-        for (int i = 0, l = feed.Count; i < l; i++)
+        UIRobotCommand card;
+        if (cardsNotInPlay.Count > 0)
         {
-            if (!feed[i].gameObject.activeSelf)
-            {
-                return feed[i];
-            }
+            card = cardsNotInPlay[0];
+            cardsNotInPlay.RemoveAt(0);
+        } else
+        {
+            card = Instantiate(commandPrefab, cardsHolder, false);
         }
-        var card = Instantiate(commandPrefab, cardsHolder, false);
-        feed.Add(card);
         return card;
     }
 
